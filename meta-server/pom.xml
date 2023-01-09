@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>eu.mansipi</groupId>
+  <artifactId>meta-server</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <!--<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.3</version>
+  </parent>-->
+  <parent>
+    <groupId>eu.mansipi</groupId>
+    <artifactId>rip-maven-plugin-project</artifactId>
+    <version>1.0</version>
+  </parent>
+
+  <properties>
+    <maven.compiler.source>18</maven.compiler.source>
+    <maven.compiler.target>18</maven.compiler.target>
+	<spring.boot.version>2.7.3</spring.boot.version>
+    <!--<start-class>eu.mansipi.jokes_and_facts_server.Main</start-class>-->
+  </properties>
+
+<dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-jackson</artifactId>
+      <version>12.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.24</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>eu.mansipi</groupId>
+      <artifactId>webclient-server-client</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.mansipi</groupId>
+      <artifactId>feign-server-client</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.mansipi</groupId>
+      <artifactId>native-server-client</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jersey</artifactId>
+    </dependency>
+
+    <!--to import resilience4j decorators and circuit breaker-->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-all</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <!--Work in progress. Test spring starter. // resilience4j-all is then Optional, only required when you want to use the Decorators class-->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-spring-boot2</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+
+    <!--to import aspect oriented-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId> <!--Migration guide: https://support.intershop.com/kb/index.php/Display/2914L4-->
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-spring-boot2</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-reactor</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-feign</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+
+
+    <!--For testing the cache aspect:-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+      <version>2.7.3</version></dependency>
+    <dependency>
+      <groupId>javax.cache</groupId>
+      <artifactId>cache-api</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+      <version>3.10.8</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+
+
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.hervian</groupId>
+        <artifactId>rip-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <configuration>
+          <generateDocConfig>
+            <additionalDocs>
+              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+            </additionalDocs>
+            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
+            <restAnnotationType>SPRING_JAX_RS</restAnnotationType>
+          </generateDocConfig>
+          <!--<generateUiConfig>
+            <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
+          </generateUiConfig>-->
+          <generateClientConfig>
+            <languages>
+              <language>JAVA</language>
+              <language>DART</language>
+            </languages>
+          </generateClientConfig>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <!--<goal>generateDoc</goal>&lt;!&ndash;Mandatory goal. Bound to Compile phase. Optional configuration: 1) Add @io.swagger.v3.oas.annotations.OpenAPIDefinition annotation anywhere in your source code to customize the generated swagger doc. 2) Add other swagger annotations to your REST methods to add detailed documentation (@Api, @ApiOperation etc). Note that both requires that you add the relevant dependency to get those annotations on the classpath if not already present. &ndash;&gt;
+              <goal>generateUi</goal>&lt;!&ndash;Optional goal. Bound to Compile phase.&ndash;&gt;
+              <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
+              <goal>generateRest</goal>
+              <goal>rip</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>16</source>
+          <target>16</target><!--TODO: Works w jdk8 but not 17-->
+        </configuration>
+      </plugin>
+	  <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

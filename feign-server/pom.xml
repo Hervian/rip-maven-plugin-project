@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>eu.mansipi</groupId>
+  <artifactId>feign-server</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <!--<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.0</version>
+  </parent>-->
+  <parent>
+    <groupId>eu.mansipi</groupId>
+    <artifactId>rip-maven-plugin-project</artifactId>
+    <version>1.0</version>
+  </parent>
+
+  <properties>
+    <maven.compiler.source>18</maven.compiler.source>
+    <maven.compiler.target>18</maven.compiler.target>
+	<spring.boot.version>2.7.3</spring.boot.version>
+    <!--<start-class>eu.mansipi.jokes_server.Main</start-class>-->
+  </properties>
+  
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!--<dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.24</version>
+      <scope>provided</scope>
+    </dependency>-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jersey</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId> <!--Migration guide: https://support.intershop.com/kb/index.php/Display/2914L4-->
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.hervian</groupId>
+        <artifactId>rip-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <configuration>
+          <generateDocConfig>
+            <!--<resourcePackages>
+              <resourcePackage>dk.tdc.chub.exposure.v1</resourcePackage>
+            </resourcePackages>-->
+            <additionalDocs>
+              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+            </additionalDocs>
+            <restAnnotationType>SPRING_JAX_RS</restAnnotationType>
+            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
+          </generateDocConfig>
+          <!--<generateUiConfig>
+            <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
+          </generateUiConfig>-->
+          <generateClientConfig>
+            <languages>
+              <language>JAVA</language>
+              <language>DART</language>
+            </languages>
+            <javaConfig>
+              <library>feign</library>
+            </javaConfig>
+          </generateClientConfig>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>rip</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>16</source>
+          <target>16</target><!--TODO: Works w jdk8 but not 17-->
+        </configuration>
+      </plugin>
+	  <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

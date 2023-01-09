@@ -1,0 +1,9 @@
+spring:
+  cache:
+    jcache:
+      config: 'classpath:ehcache.xml'
+# TODO: trying yml format. Perhaps above wont work
+resilience4j.retry:
+  configs:
+    default:
+      maxAttempts: 5

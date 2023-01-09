@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>eu.mansipi</groupId>
+  <artifactId>webclient-server</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <!--<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.0</version>
+  </parent>-->
+  <parent>
+    <groupId>eu.mansipi</groupId>
+    <artifactId>rip-maven-plugin-project</artifactId>
+    <version>1.0</version>
+  </parent>
+
+
+  <properties>
+    <maven.compiler.source>18</maven.compiler.source>
+    <maven.compiler.target>18</maven.compiler.target>
+	<spring.boot.version>2.7.3</spring.boot.version>
+    <!--<start-class>eu.mansipi.random_facts_server.Main</start-class>-->
+  </properties>
+  
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.integralblue</groupId>
+      <artifactId>java-httpclient-webclient-spring-boot-starter</artifactId>
+      <version>RELEASE</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <!--<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jersey</artifactId>
+    </dependency>-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+      <!--<version>2.6.4</version>-->
+    </dependency>
+
+    <!--test if below dep. generates swagger doc for spring webflux rest endpoints-->
+    <!--<dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-webmvc-core</artifactId>
+      <version>1.6.9</version>
+    </dependency>-->
+
+    <!--Guide to the project, including the starting point: the controller. org.springdoc.webflux.api.OpenApiResource is Controller that handles /v3/api-docs and /v3/api-docs.yaml endpoints-->
+    <!--Works:-->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-webflux-core</artifactId>
+      <version>1.6.9</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId> <!--Migration guide: https://support.intershop.com/kb/index.php/Display/2914L4-->
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.hervian</groupId>
+        <artifactId>rip-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <configuration>
+          <generateDocConfig>
+            <additionalDocs>
+              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+            </additionalDocs>
+            <!--<restAnnotationType>SPRING</restAnnotationType>-->
+            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
+          </generateDocConfig>
+          <!--<generateUiConfig>
+            <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
+          </generateUiConfig>-->
+          <generateClientConfig>
+            <languages>
+              <language>JAVA</language>
+              <language>DART</language>
+            </languages>
+          </generateClientConfig>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <!--<goal>generateDoc</goal>&lt;!&ndash;Mandatory goal. Bound to Compile phase. Optional configuration: 1) Add @io.swagger.v3.oas.annotations.OpenAPIDefinition annotation anywhere in your source code to customize the generated swagger doc. 2) Add other swagger annotations to your REST methods to add detailed documentation (@Api, @ApiOperation etc). Note that both requires that you add the relevant dependency to get those annotations on the classpath if not already present. &ndash;&gt;
+              <goal>generateUi</goal>&lt;!&ndash;Optional goal. Bound to Compile phase.&ndash;&gt;
+              <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
+              <goal>rip</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--<plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        &lt;!&ndash;<configuration>
+          &lt;!&ndash;<directories>C:\Users\m83522\.m2\repository\org\springframework\boot\spring-boot-starter-webflux\2.7.0</directories>&ndash;&gt;
+        </configuration>&ndash;&gt;
+        <executions>
+          <execution>
+            <id>pre-integration-test</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-integration-test</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <outputFileName>openapi.json</outputFileName>
+          <outputDir>${project.build.directory}/openapi-spec</outputDir>
+          <apiDocsUrl>http://localhost:8080/v3/api-docs</apiDocsUrl>
+        </configuration>
+      </plugin>-->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>16</source>
+          <target>16</target><!--TODO: Works w jdk8 but not 17-->
+        </configuration>
+      </plugin>
+	  <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
