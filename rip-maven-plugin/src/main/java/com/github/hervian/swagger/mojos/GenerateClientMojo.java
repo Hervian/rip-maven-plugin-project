@@ -4,8 +4,12 @@ import com.github.hervian.swagger.config.GenerateClientConfig;
 import com.github.hervian.swagger.config.PropertiesReader;
 import com.github.hervian.swagger.generators.ClientGenerator;
 import com.github.hervian.swagger.generators.ClientGeneratorInput;
+import com.github.hervian.swagger.generators.ClientGeneratorOutput;
 import com.github.hervian.swagger.generators.JavaClientGenerator;
 import com.github.hervian.swagger.generators.DartClientGenerator;
+import com.github.hervian.swagger.installers.ClientInstaller;
+import com.github.hervian.swagger.publishers.ClientPublisher;
+import com.google.common.collect.Lists;
 import io.openapitools.swagger.OutputFormat;
 import io.redskap.swagger.brake.core.CoreConfiguration;
 import io.redskap.swagger.brake.maven.MavenConfiguration;
@@ -107,13 +111,35 @@ public class GenerateClientMojo extends AbstractMojo {
     if (cmdLineGoals.contains("swagger:generateClient") || (apiIsDifferentThanLastVersion=apiIsDifferentThanLastVersion() && phaseIsLaterThanCompile(cmdLineGoals))){ //TODO: what about package goal?
       getLog().info("generating a client code for your server since new api contains changes compared to last version.");
 //TODO: If java genJavaClient, if Dart genDartClient
-      String outputPath = generateClient();
+      List<ClientGeneratorOutput> clientGeneratorOutputs = generateClient();
       //postProcessClient(outputPath);
       //if (generateClientConfig.getLanguages().contains(GenerateClientConfig.Language.JAVA)){//install/deploy java
-      if (cmdLineGoals==null || cmdLineGoals.contains("install")){
-        installClient();
-      } else if (cmdLineGoals.contains("deploy")){
-        deployClient();
+      for (ClientGeneratorOutput clientGeneratorOutput: clientGeneratorOutputs) {
+        if (cmdLineGoals == null || cmdLineGoals.contains("install")) {
+          ClientInstaller.ClientInstallerInput clientInstallerInput =
+              ClientInstaller.ClientInstallerInput.builder()
+                  .log(getLog())
+                  .project(getProject())
+                  .mavenSession(getMavenSession())
+                  .pluginManager(getPluginManager())
+                  .propertiesReader(getPropertiesReader())
+                  .clientGeneratorOutput(clientGeneratorOutput)
+                  .clientConfig(getGenerateClientConfig())
+                  .build();
+          clientGeneratorOutput.getLanguage().getClientInstaller().install(clientInstallerInput);
+        } else if (cmdLineGoals.contains("deploy")) {
+          ClientPublisher.ClientPublisherInput clientPublisherInput = ClientPublisher.ClientPublisherInput.builder()
+              .log(getLog())
+              .project(getProject())
+              .mavenSession(getMavenSession())
+              .pluginManager(getPluginManager())
+              .propertiesReader(getPropertiesReader())
+              .clientGeneratorOutput(clientGeneratorOutput)
+              .clientConfig(getGenerateClientConfig())
+              .build();
+          clientGeneratorOutput.getLanguage().getClientPublisher().publish(clientPublisherInput);
+          //deployClient();
+        }
       }
     } else {
       String msg;
@@ -241,7 +267,7 @@ public class GenerateClientMojo extends AbstractMojo {
     //System.out.println("LifeCyclePhase: " + execution.getLifecyclePhase());
   }
 
-  private String generateClient() throws MojoExecutionException {
+  private List<ClientGeneratorOutput> generateClient() throws MojoExecutionException {
     ClientGeneratorInput clientGeneratorInput = ClientGeneratorInput.builder()
       .log(getLog())
       .propertiesReader(propertiesReader)
@@ -252,114 +278,20 @@ public class GenerateClientMojo extends AbstractMojo {
       .generateClientConfig(generateClientConfig)
       .build();
 
+    List<ClientGeneratorOutput> clientGeneratorOutputs = Lists.newArrayList();
     for (GenerateClientConfig.Language language: generateClientConfig.getLanguages()){
       switch (language){
         case JAVA:
-          return new JavaClientGenerator().generateClient(clientGeneratorInput);
+          clientGeneratorOutputs.add(new JavaClientGenerator().generateClient(clientGeneratorInput));
         case DART:
-          return new DartClientGenerator().generateClient(clientGeneratorInput);
+          clientGeneratorOutputs.add(new DartClientGenerator().generateClient(clientGeneratorInput));
       }
     }
-    return "";
+    return clientGeneratorOutputs;
   }
 
   private String getPathToSwaggerDoc() {
     return project.getBuild().getOutputDirectory()+"/swagger/swagger.json";
-  }
-
-  //https://maven.apache.org/shared/maven-invoker/usage.html
-  private void installClient() throws MojoExecutionException {
-    getLog().info("Installing client in local repository. TODO...");
-
-    InvocationRequest request = new DefaultInvocationRequest();
-    request.setPomFile( new File( getClientPomFile() ) );
-    request.setBaseDirectory( new File(ClientGenerator.getOutputPath( project)+"/java")); //TODO: make more generic. What about fx dart?
-
-    //request.setGoals( Arrays.asList( "clean", "install" ) );
-    String pathToRipMavenPluginJar = "";
-    try {
-      pathToRipMavenPluginJar = new File(GenerateClientMojo.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-      pathToRipMavenPluginJar.replace("\\", "/");
-      getLog().info("rip-maven-plugin jar path: " + pathToRipMavenPluginJar);
-    } catch (URISyntaxException e) {
-      throw new MojoExecutionException(e);
-    }
-    //TODO: work in progress. Trying to compile WITH abstractprocessor
-    request.setGoals( Arrays.asList( "clean", "install", "-DMAVEN_OPTS=\"-processorpath "+pathToRipMavenPluginJar+"\"\" ) );//path/to/mapstruct-processor-1.3.0.Beta1.jar\"" ) );
-    MavenExecutionRequest mavenExecutionRequest = mavenSession.getRequest();
-    /*File globalSettingsFile = mavenExecutionRequest.getGlobalSettingsFile();
-    File userSettingsFile = mavenExecutionRequest.getUserSettingsFile();
-    request.setGlobalSettingsFile(globalSettingsFile);*/
-    Invoker invoker = new DefaultInvoker();
-    try {
-      invoker.execute( request );
-    } catch (MavenInvocationException e) {
-      e.printStackTrace();
-    }
-
-    /*MavenProject clientProject = new MavenProject();
-    project.setFile( new File(project.getBuild().getDirectory()+"/temp") );
-    executeMojo(
-      plugin(
-        groupId("org.apache.maven.plugins"),
-        artifactId("maven-install-plugin"),
-        version("3.0.0-M1") //TODO: get as property
-      ),
-      goal("install"),
-      configuration(
-        //element(name("artifactId"), TODO),
-        //element(name("packaging"), "jar"),
-        //element(name("version"), project.getVersion()),
-        //element(name("groupId"), project.getGroupId()),
-       // element(name("classifier"), TODO),
-        //element(name("pomFile"), getClientPomFile())
-        //element(name("pomFile"), "pom.xml"),
-        //element(name("url"), project.getDistributionManagementArtifactRepository().getUrl()) //TODO: if snapshot use project.getDistributionManagementArtifactRepository().getSnapshot ...  and similarly for release
-        //element(name("configOptions"), element(name(CodegenConstants.SOURCE_FOLDER), ""))
-      ),
-      executionEnvironment(
-        clientProject,
-        mavenSession,
-        pluginManager
-      )
-    );*/
-  }
-
-  private String getClientPomFile(){
-    String pathToClientPom = ClientGenerator.getOutputPath( project) +"/pom.xml";
-    getLog().info("Path to pom.xml of generated client code: " + pathToClientPom);
-    return pathToClientPom;
-  }
-
-  /**
-   * http://techtraits.com/build%20management/maven/2012/06/24/Maven-Deploying-multiple-artifacts-from-one-build.html
-   */
-  private void deployClient() throws MojoExecutionException {
-    getLog().info("Deploying client to binary repo.");
-    /*executeMojo(
-      plugin(
-        groupId("org.apache.maven.plugins"),
-        artifactId("maven-deploy-plugin"),
-        version("3.0.0-M1")
-      ),
-      goal("deploy-file"),
-      configuration(
-        element(name("artifactId"), TODO),
-        element(name("packaging"), "jar"),
-        element(name("version"), project.getVersion()),
-        element(name("groupId"), project.getGroupId()),
-        element(name("classifier"), TODO),
-        element(name("file"), target/path/to/client.jar),
-        element(name("pomFile"), "pom.xml"),
-        element(name("url"), project.getDistributionManagementArtifactRepository().getUrl()) //TODO: if snapshot use project.getDistributionManagementArtifactRepository().getSnapshot ...  and similarly for release
-        //element(name("configOptions"), element(name(CodegenConstants.SOURCE_FOLDER), ""))
-      ),
-      executionEnvironment(
-        project,
-        mavenSession,
-        pluginManager
-      )
-    );*/
   }
 
 }

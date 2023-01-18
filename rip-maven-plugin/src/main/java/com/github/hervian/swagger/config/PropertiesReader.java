@@ -46,8 +46,11 @@ public class PropertiesReader {
     return getProperty("swagger-brake.version");
   }
 
-
   public String getOrgOpenapitoolsVersion() {
     return getProperty("org.openapitools.version");
+  }
+
+  public String getExecMavenPluginVersion() {
+    return getProperty("exec.maven.plugin");
   }
 }

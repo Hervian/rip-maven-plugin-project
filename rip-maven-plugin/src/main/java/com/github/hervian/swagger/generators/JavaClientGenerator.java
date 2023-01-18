@@ -1,5 +1,6 @@
 package com.github.hervian.swagger.generators;
 
+import com.github.hervian.swagger.config.GenerateClientConfig;
 import com.github.hervian.swagger.config.PropertiesReader;
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
 import lombok.Builder;
@@ -34,7 +35,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 public class JavaClientGenerator implements ClientGenerator {
 
-  public String generateClient(ClientGeneratorInput clientGeneratorInput) throws MojoExecutionException {
+  public ClientGeneratorOutput generateClient(ClientGeneratorInput clientGeneratorInput) throws MojoExecutionException {
     String path = generateClientSourceCode(clientGeneratorInput);
     /*try {
       postProcessGeneratedSourceCode(clientGeneratorInput, path);
@@ -46,7 +47,7 @@ public class JavaClientGenerator implements ClientGenerator {
     for (Object object: clientGeneratorInput.getProject().getCompileSourceRoots()) {
       System.out.println(object);
     }
-    return path;
+    return ClientGeneratorOutput.builder().language(GenerateClientConfig.Language.JAVA).path(path).build();
   }
 
 

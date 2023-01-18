@@ -9,7 +9,15 @@
     <groupId>eu.mansipi</groupId>
     <artifactId>rip-maven-plugin-project</artifactId>
     <packaging>pom</packaging>
-	<version>1.0</version>
+	<version>1.0.0-SNAPSHOT</version>
+
+  <distributionManagement>
+    <repository>
+      <id>central</id>
+      <name>a0u8jjrkmol9g-artifactory-primary-0-releases</name>
+      <url>https://mansipi3.jfrog.io/artifactory/mansipi-libs-release</url>
+    </repository>
+  </distributionManagement>
 
 	<!-- sub modules -->
 	<modules>

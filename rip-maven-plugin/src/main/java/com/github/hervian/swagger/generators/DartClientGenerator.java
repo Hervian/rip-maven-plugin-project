@@ -1,5 +1,6 @@
 package com.github.hervian.swagger.generators;
 
+import com.github.hervian.swagger.config.GenerateClientConfig;
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -18,7 +19,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 public class DartClientGenerator implements ClientGenerator {
 
-  public String generateClient(ClientGeneratorInput clientGeneratorInput) throws MojoExecutionException {
+  public ClientGeneratorOutput generateClient(ClientGeneratorInput clientGeneratorInput) throws MojoExecutionException {
     clientGeneratorInput.getLog().info("Genering Dart client code from " + clientGeneratorInput.getPathToSwaggerDoc());
     MavenProject project = clientGeneratorInput.getProject();
     String outputPath = ClientGenerator.getOutputPath( project) + "/dart";
@@ -32,10 +33,15 @@ public class DartClientGenerator implements ClientGenerator {
       configuration( //see https://openapi-generator.tech/docs/generators/java/
         element(name("inputSpec"), clientGeneratorInput.getPathToSwaggerDoc()),
         element(name("generatorName"), "dart"),
-        element(name("output"), ClientGenerator.getOutputPath( project) + "/dart"),
+        element(name("output"), outputPath),
         element(name("configOptions"),
-          element(name(CodegenConstants.ALLOW_UNICODE_IDENTIFIERS), "true"),
-          element(name("useBeanValidation"), "true")
+          //element(name(CodegenConstants.ALLOW_UNICODE_IDENTIFIERS), "true"),
+          element(name("pubVersion"), clientGeneratorInput.getProject().getVersion()),
+          element(name("pubName"),  (clientGeneratorInput.getProject().getArtifactId() + "-client").replaceAll("-", "_")),
+          //element(name("pubLibrary"), TODO),
+          element(name("pubDescription"), "Generated dart client for the server " + clientGeneratorInput.getProject().getArtifactId())
+          //element(name("pubAuthor"), TODO)
+          //,element(name("useBeanValidation"), "true")
         )
       ),
       executionEnvironment(
@@ -47,7 +53,7 @@ public class DartClientGenerator implements ClientGenerator {
     //GenerateClientMojo generateClientMojo = new GenerateClientMojo();
     //generation pt happens in a separate Mojo which the user of this library must enable by adding <goal>generateAndDeployClient</goal>
 
-    return outputPath;
+    return ClientGeneratorOutput.builder().language(GenerateClientConfig.Language.DART).path(outputPath).build();
   }
 
 }

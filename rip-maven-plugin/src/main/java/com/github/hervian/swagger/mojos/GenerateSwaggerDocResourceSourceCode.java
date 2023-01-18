@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 // maven properties: https://stackoverflow.com/a/13356378/6095334
 @Mojo(name = "generateSwaggerDocResourceSourceCode", defaultPhase = LifecyclePhase.GENERATE_SOURCES, configurator = "include-project-dependencies",
     requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, threadSafe = true)*/
+@Deprecated
 public class GenerateSwaggerDocResourceSourceCode {
    /* extends ApiDocumentMojo {
 

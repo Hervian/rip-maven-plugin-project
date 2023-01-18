@@ -54,4 +54,6 @@ public class SwaggerUiJaxRsResource {
     return resource4;
   }
 
+  //.getProject().getProperties().getProperty("tomcat.http.port") + input.getGenerateDocConfig().getApiDocsUrl()
+
 }

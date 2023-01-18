@@ -6,7 +6,7 @@
 
   <groupId>eu.mansipi</groupId>
   <artifactId>meta-server</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <!--<parent>
     <groupId>org.springframework.boot</groupId>
@@ -16,7 +16,7 @@
   <parent>
     <groupId>eu.mansipi</groupId>
     <artifactId>rip-maven-plugin-project</artifactId>
-    <version>1.0</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -151,7 +151,7 @@
       <plugin>
         <groupId>com.github.hervian</groupId>
         <artifactId>rip-maven-plugin</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>${project.parent.version}</version>
         <configuration>
           <generateDocConfig>
             <additionalDocs>
