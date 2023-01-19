@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.io.InputStream;
 
-@RestController
-@RequestMapping({"/doc2"})
+/*@RestController
+@RequestMapping({"/doc2"})*/
+@Deprecated
 public class SwaggerUiSpringResource2 {
-  @Operation(
+  /*@Operation(
       hidden = true
   )
   @GetMapping(value="/swagger-ui", produces = MediaType.TEXT_HTML_VALUE)
@@ -35,7 +36,7 @@ public class SwaggerUiSpringResource2 {
     return StreamUtils.copyToByteArray(var2);
   }
 
-  /*@Operation(
+  *//*@Operation(
       hidden = true
   )
   @GetMapping(value="/swagger/ui/{wildcard:.*html.*}", produces = MediaType.TEXT_HTML_VALUE)
@@ -44,9 +45,9 @@ public class SwaggerUiSpringResource2 {
     System.out.println("@PathVariable String path = " + wildcard);
     InputStream var3 = var2.getResourceAsStream(wildcard);
     return StreamUtils.copyToByteArray(var3);
-  }*/
+  }*//*
 
-  /*
+  *//*
   Below works except for the
   @Operation(
       hidden = true
@@ -58,7 +59,7 @@ public class SwaggerUiSpringResource2 {
     InputStream var3 = getResourceAsStream(wildcard, var2);
     byte[] byteArray = StreamUtils.copyToByteArray(var3);
     return byteArray:
-  }*/
+  }*//*
 
   @Operation(
       hidden = true
@@ -87,7 +88,7 @@ public class SwaggerUiSpringResource2 {
   private InputStream getResourceAsStream(@PathVariable String wildcard, ClassLoader var2) {
     return var2.getResourceAsStream("swagger/ui/"+wildcard);
   }
-/*
+*//*
   @Operation(
       hidden = true
   )
@@ -130,6 +131,6 @@ public class SwaggerUiSpringResource2 {
     System.out.println("@PathVariable String path = " + wildcard);
     InputStream var3 = getResourceAsStream(wildcard, var2);
     return StreamUtils.copyToByteArray(var3);
-  }*/
-
+  }*//*
+*/
 }

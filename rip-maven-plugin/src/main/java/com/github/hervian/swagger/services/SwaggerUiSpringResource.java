@@ -1,6 +1,8 @@
 package com.github.hervian.swagger.services;
 
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +17,19 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("/doc")
+@RequestMapping("/openapi")
 public class SwaggerUiSpringResource {
+
+  @EventListener({ApplicationReadyEvent.class})
+  public void logPathToSwaggerUi() {
+    System.out.println("SwaggerUI is available at .../openapi/swagger-ui.html");
+  }
+
+  @Operation(hidden = true)
+  @GetMapping(value="", produces = MediaType.TEXT_HTML_VALUE)
+  public byte[] getSwaggerUiOnBasPath() throws IOException {
+    return getSwaggerUiHtml();
+  }
 
   @Operation(hidden = true)
   @GetMapping(value="/swagger-ui", produces = MediaType.TEXT_HTML_VALUE)
@@ -35,7 +48,6 @@ public class SwaggerUiSpringResource {
     System.out.println("fileName = " + fileName);*/
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     InputStream resource4 = classloader.getResourceAsStream(String.format("swagger/ui/index.html"));
-    System.out.println("resource4!=null: "+Boolean.valueOf(resource4!=null));
     return StreamUtils.copyToByteArray(resource4);
   }
 
@@ -57,12 +69,10 @@ public class SwaggerUiSpringResource {
   @GetMapping(value="/swagger/ui/{wildcard:.*}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<byte[]> getSwaggerUiFiles(@PathVariable("wildcard") String wildcard) throws IOException {
     ClassLoader var2 = Thread.currentThread().getContextClassLoader();
-    System.out.println("@PathVariable String path = " + wildcard);
     InputStream var3 = getResourceAsStream(wildcard, var2);
     byte[] byteArray = StreamUtils.copyToByteArray(var3);
     String contentType = null;
     String fileType = wildcard.substring(wildcard.lastIndexOf(".")+1);
-    System.out.println("FileType = " + fileType);
     switch (fileType){
       case "js": contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE; break;
       case "png": contentType = MediaType.IMAGE_PNG_VALUE; break;

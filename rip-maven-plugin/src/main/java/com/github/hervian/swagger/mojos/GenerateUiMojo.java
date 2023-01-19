@@ -212,7 +212,7 @@ public class GenerateUiMojo extends AbstractMojo {
       //https://stackoverflow.com/a/50510597/6095334
       //String javascriptExpForGettingPathToJson = "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger/swagger.json'";
       //content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.protocol + '//' + window.location.host + '/doc/swagger/swagger.json'");
-      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger/swagger.json'");
+      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger.json'");
       // content = content.replaceAll("\"./swagger-ui", "\"./swagger/ui/swagger-ui");
       content = content.replaceAll("href=\"./", "href=\"./swagger/ui/");
       content = content.replaceAll("src=\"./", "src=\"./swagger/ui/");
@@ -238,8 +238,20 @@ public class GenerateUiMojo extends AbstractMojo {
         .build();
     Class<?> restType = generateDocConfig.getRestAnnotationType().getSwaggerUiResource();
     String sourceCodeWithCorrectedPackage = classFileCopier.getSourceCode(restType);
+    //String sourceCodeWithCorrectedPackageAndPathLogger = addEvenListener(sourceCodeWithCorrectedPackage);
     classFileCopier.copyResourceToBuildOutputDir(restType.getSimpleName(), sourceCodeWithCorrectedPackage, generateDocConfig.getRestAnnotationType().getRestAnnotationTypes());
   }
+
+/*  private String addEvenListener(String sourceCodeWithCorrectedPackage) {
+    int index = sourceCodeWithCorrectedPackage.lastIndexOf('}');
+    String path = getGenerateDocConfig().getApiDocsUrl();
+    String eventListener = "" +
+        "@org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)\n" +
+        "public void logPathToSwaggerUi() {\n" +
+        "    System.out.println(\"SwaggerUI is available at "+path+"\");\n" +
+        "}";
+    return sourceCodeWithCorrectedPackage.substring(0, index) + eventListener + "}";
+  }*/
 
   /* *//**
    * Generates the following:

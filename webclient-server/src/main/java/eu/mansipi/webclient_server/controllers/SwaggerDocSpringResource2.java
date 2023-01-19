@@ -23,11 +23,12 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-@RestController
-@RequestMapping({"/doc2"})
+/*@RestController
+@RequestMapping({"/doc2"})*/
+@Deprecated
 public class SwaggerDocSpringResource2 {
 
-  @Value("${server.port}")
+  /*@Value("${server.port}")
   private int serverPort;
 
   @Operation(
@@ -90,6 +91,6 @@ public class SwaggerDocSpringResource2 {
     }
 
     var2.close();
-  }
+  }*/
 }
 

@@ -17,13 +17,15 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.util.StreamUtils;
 
 @ConditionalOnProperty(value = "swagger.ui.disabled", havingValue = "false", matchIfMissing = true) //Give Spring users an option to exclude swagger-ui from, say deployments to prod environment by setting swagger.ui.disabled=true in application-prod
 @Component
-@Path("/doc") //TODO: Insert configurable base path? If done, remember to update GenerateSwaggerDocMojo which has a hard coded reference to 'doc' when specifying the url of the swagger.json in the index.html
+@Path("/openapi") //TODO: Insert configurable base path? If done, remember to update GenerateSwaggerDocMojo which has a hard coded reference to 'doc' when specifying the url of the swagger.json in the index.html
 public class SwaggerDocJaxRsResource  {
 
   @Value("${server.port}")
@@ -32,9 +34,14 @@ public class SwaggerDocJaxRsResource  {
   @Context //What is the equivalent of @Context UriInfo in Spring Rest: https://stackoverflow.com/q/34690109/6095334
   UriInfo uriInfo;
 
+  @EventListener({ApplicationReadyEvent.class})
+  public void logPathToSwaggerUi() {
+    System.out.println("Swagger.json is available at .../openapi/swagger.json");
+  }
+
   //TODO: parse inputStream/file into string and make a search-and-replace on the port number of the server such as to insert the actual port of the running app. See com.github.hervian.swagger.services.SwaggerDocSpringResource
   @Operation(hidden = true)
-  @GET @Path("swagger/swagger.json") @Produces("application/json")
+  @GET @Path("/swagger.json") @Produces("application/json")
   public Response getSwaggerJson() throws IOException {
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     InputStream resource = classloader.getResourceAsStream("swagger/swagger.json");
@@ -46,13 +53,13 @@ public class SwaggerDocJaxRsResource  {
   }
 
   @Operation(hidden = true)
-  @GET @Path("swagger/swagger.html") @Produces("text/html")
+  @GET @Path("/swagger.html") @Produces("text/html")
   public Response getSwaggerHtml() throws IOException {
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     String path = uriInfo.getPath().substring(uriInfo.getPath().indexOf("/")+1);
     System.out.println("uriInfo.getPath() = " + uriInfo.getPath());
     System.out.println("uriInfo.getPath().substring(uriInfo.getPath().indexOf(\"/\")+1) = " + path);
-    InputStream inputStream = classloader.getResourceAsStream(path);
+    InputStream inputStream = classloader.getResourceAsStream("swagger/" + path);
     File swaggerHtmlFile = File.createTempFile("swagger", "html");
     swaggerHtmlFile.deleteOnExit();
     //FileUtils.copyInputStreamToFile(inputStream, swaggerHtmlFile);

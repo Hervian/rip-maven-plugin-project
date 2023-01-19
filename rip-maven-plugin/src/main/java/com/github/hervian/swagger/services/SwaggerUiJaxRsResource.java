@@ -11,15 +11,23 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 import java.io.InputStream;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @ConditionalOnProperty(value = "swagger.ui.disabled", havingValue = "false", matchIfMissing = true) //Give Spring users an option to exclude swagger-ui from, say deployments to prod environment by setting swagger.ui.disabled=true in application-prod
 @Component
-@Path("/doc") //TODO Insert configurable base path? If done, remember to update GenerateSwaggerDocMojo which has a hard coded reference to 'doc' when specifying the url of the swagger.json in the index.html
+@Path("/openapi") //TODO Insert configurable base path? If done, remember to update GenerateSwaggerDocMojo which has a hard coded reference to 'doc' when specifying the url of the swagger.json in the index.html
 public class SwaggerUiJaxRsResource {
 
   @Context
   UriInfo uriInfo;
+
+  @Operation(hidden = true)
+  @GET
+  public InputStream getSwaggerUiOnBasePath(){
+    return getSwaggerUiHtml();
+  }
 
   @Operation(hidden = true)
   @GET @Path("swagger-ui")
@@ -27,18 +35,16 @@ public class SwaggerUiJaxRsResource {
     return getSwaggerUiHtml();
   }
 
+  @EventListener({ApplicationReadyEvent.class})
+  public void logPathToSwaggerUi() {
+    System.out.println("SwaggerUI is available at .../openapi/swagger-ui.html");
+  }
+
   @Operation(hidden = true)
   @GET @Path("swagger-ui.html")
   public InputStream getSwaggerUiHtml(){
-    System.out.println(uriInfo.getPath());
-    for (PathSegment pathSegment: uriInfo.getPathSegments()){
-      System.out.println(pathSegment.getPath());
-    }
-    String fileName = uriInfo.getPath().substring(uriInfo.getPath().lastIndexOf("/"));
-    System.out.println("fileName = " + fileName);
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     InputStream resource4 = classloader.getResourceAsStream(String.format("swagger/ui/index.html"));
-    System.out.println("resource4!=null: "+Boolean.valueOf(resource4!=null));
     return resource4;
   }
 
@@ -48,12 +54,7 @@ public class SwaggerUiJaxRsResource {
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     String path = uriInfo.getPath().substring(uriInfo.getPath().indexOf("/")+1);
     InputStream resource4 = classloader.getResourceAsStream(path);
-    System.out.println("resource4!=null: "+Boolean.valueOf(resource4!=null));
-    System.out.println(uriInfo.getPath());
-    System.out.println(path);
     return resource4;
   }
-
-  //.getProject().getProperties().getProperty("tomcat.http.port") + input.getGenerateDocConfig().getApiDocsUrl()
 
 }

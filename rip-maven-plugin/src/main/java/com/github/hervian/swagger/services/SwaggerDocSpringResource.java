@@ -2,6 +2,8 @@ package com.github.hervian.swagger.services;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,7 +25,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 @RestController
-@RequestMapping("")
+@RequestMapping("openapi")
 public class SwaggerDocSpringResource {
 
   @Value("${server.port}")
@@ -41,11 +43,16 @@ public class SwaggerDocSpringResource {
     return resource;
   }*/
 
-  @Operation(hidden = true)
+  /*@Operation(hidden = true)
   //@ResponseBody
-  @GetMapping(value = "/openapi")
+  @GetMapping(value = "/")
   public ResponseEntity<byte[]> getOpenApiJson() throws IOException {
     return getSwaggerJson();
+  }*/
+
+  @EventListener({ApplicationReadyEvent.class})
+  public void logPathToSwaggerUi() {
+    System.out.println("Swagger.json is available at .../openapi/swagger.json");
   }
 
   @Operation(hidden = true)
@@ -73,7 +80,7 @@ public class SwaggerDocSpringResource {
 
   //TODO: make below work
   @Operation(hidden = true)
-  @GetMapping(value = "/swagger/swagger.html", produces = "text/html")
+  @GetMapping(value = "/swagger.html", produces = "text/html")
   public Mono<Void> getSwaggerHtml(ServerHttpResponse response, ServerHttpRequest request) throws IOException { //https://www.knowledgefactory.net/2021/09/spring-webflux-file-download-rest-api.html
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     //spring webmvn example of getting the path from the getMapping: https://stackoverflow.com/a/37718400/6095334

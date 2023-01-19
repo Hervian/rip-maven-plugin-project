@@ -14,7 +14,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
@@ -57,8 +59,8 @@ public class GenerateDocConfig {
   private List<AdditionalDoc> additionalDocs;
 
   public enum RestAnnotationType { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
-    SPRING(SwaggerDocSpringResource.class, SwaggerUiSpringResource.class, Arrays.asList(ConditionalOnProperty.class, GetMapping.class, RestController.class, RequestMapping.class, Operation.class, GET.class, Mono.class, MultiValueMap.class, ObjectMapper.class,  Versioned.class, Value.class)),
-    SPRING_JAX_RS(SwaggerDocJaxRsResource.class, SwaggerUiJaxRsResource.class, Arrays.asList(GET.class, Path.class, Context.class, Component.class, ConditionalOnProperty.class, Operation.class, StreamUtils.class, Value.class, JsonDeserialize.class));
+    SPRING(SwaggerDocSpringResource.class, SwaggerUiSpringResource.class, Arrays.asList(ConditionalOnProperty.class, GetMapping.class, RestController.class, RequestMapping.class, Operation.class, GET.class, Mono.class, MultiValueMap.class, ObjectMapper.class,  Versioned.class, Value.class, EventListener.class, ApplicationReadyEvent.class)),
+    SPRING_JAX_RS(SwaggerDocJaxRsResource.class, SwaggerUiJaxRsResource.class, Arrays.asList(GET.class, Path.class, Context.class, Component.class, ConditionalOnProperty.class, Operation.class, StreamUtils.class, Value.class, JsonDeserialize.class, EventListener.class, ApplicationReadyEvent.class));
 
     @Getter private Class<?> swaggerDocResource;
     @Getter private Class<?> swaggerUiResource;

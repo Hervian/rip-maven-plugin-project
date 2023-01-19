@@ -5,7 +5,7 @@ function delay() {
     newElement.innerHTML = '<div id=download-div>';
 
     div.innerHTML += '<div class="swagger-ui" style="font-family: sans-serif;font-size: 14px;">' +
-      ' Download <a class="link" href="./swagger/swagger.html">HTML</a> | <a class="link" href="./swagger/swagger.pdf">PDF</a>' +
+      ' Download <a class="link" href="./swagger.html">HTML</a> | <a class="link" href="./swagger.pdf">PDF</a>' +
       '</div>';
 
     //Below is to fix problem with added div element not always being shown. Taken from: https://stackoverflow.com/q/3485365/6095334
