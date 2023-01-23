@@ -102,6 +102,7 @@ public class GenerateDocMojo extends AbstractMojo {
     getLog().info("Executing GenerateDocMojo (generates swagger.json (using io.openapitools.swagger:swagger-maven-plugin), additional docs as configured and a jax-rs annotated class to server the swagger.json doc etc.)");
     validatePhaseAndGoals();
 
+    //TODO: if (!openApiDefinitionAnnotationFound()) { Create AbstractProcessor that sets this value
     generateOpenApiConfigClass();
     
     getLog().info("generating swagger.json document");

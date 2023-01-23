@@ -1,7 +1,10 @@
 package com.github.hervian.swagger.generators.docs;
 
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.descriptor.PluginDescriptor;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
@@ -74,7 +77,11 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
      * Call spring-boot-maven-plugin stop. Best to use the Pid. One cannot expect actuator/shutdown to be enabled (http://localhost:8080/actuator/shutdown).
      */
     reserveRandomPort(documentGeneratorInput);
-    startServer(documentGeneratorInput);
+    try {
+      startServer(documentGeneratorInput);
+    } catch (DependencyResolutionRequiredException e) {
+      throw new MojoExecutionException(e);
+    }
     getOpenApiDoc(documentGeneratorInput);
     stopServer(documentGeneratorInput);
 
@@ -101,16 +108,29 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
       ));
   }
 
-  private void startServer(DocumentGeneratorInput input) throws MojoExecutionException {
+  //TODO: get swagger-ui from this approach as well? https://springdoc.org/v2/#general-overview
+  //TODO: add needed springdoc dependencies to classpath: https://stackoverflow.com/a/45710571/6095334
+  private void startServer(DocumentGeneratorInput input) throws MojoExecutionException, DependencyResolutionRequiredException {
     input.getLog().info("Starting server with the aim of retrieving the open api doc from configured endpoint.");
+//input.getProject().getTestClasspathElements().forEach(e -> System.out.println(((Dependency)e).getArtifactId()));
+//input.getMavenSession().getPluginContext()
+    //pluginDescriptor.getArtifacts()
     MojoExecutorWrapper.executeMojo(
       plugin(
         groupId("org.springframework.boot"),
-        artifactId("spring-boot-maven-plugin"),//https://github.com/openapi-tools/swagger-maven-plugin
-        version("2.7.0")//TODO: get values from PropertiesReader OR from implementing project's spring version?
+        artifactId("spring-boot-maven-plugin"), //https://docs.spring.io/spring-boot/docs/3.0.2/maven-plugin/reference/htmlsingle/#goals-start
+        version("3.0.1")//TODO: get values from PropertiesReader OR from implementing project's spring version?
       ),
       goal("start"),
       configuration(
+        element(name("classesDirectory"), input.getProject().getBuild().getOutputDirectory()),
+          element(name("directories"),String.join(",", input.getProject().getTestClasspathElements())),
+          element(name("includes"),
+            element(name("include"), //https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin/src/main/java/org/springframework/boot/maven/Include.java
+              element(name("groupId"),"org.springdoc"),
+              element(name("artifactId"),"springdoc-openapi-starter-webflux-api") //TODO: if spring-boot-starter-webflux is on classpath use 'springdoc-openapi-starter-webflux-api' else if 'springdoc-openapi-starter-webmvc-api'. Also: if spring-security is on classpath then add 'springdoc-openapi-starter-common'?
+            )
+            ),
         element(name("arguments"),
           element(name("argument"), "--server.port="+ input.getProject().getProperties().getProperty("tomcat.http.port"))
         )

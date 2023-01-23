@@ -22,9 +22,7 @@ public abstract class RestClient {
 
   public String getArtifactIdAsJavaTypeName() {
     String artifactIdCopy = Character.toUpperCase(artifactId.charAt(0)) + artifactId.substring(1);
-    System.out.println("artifactIdCopy = " + artifactIdCopy);
     while (artifactIdCopy.indexOf('-')>0) {
-      System.out.println("artifactIdCopy = " + artifactIdCopy);
       Character upperCasedChar = null;
       if (artifactIdCopy.length()>artifactIdCopy.indexOf('-')) {
         upperCasedChar = Character.toUpperCase(artifactIdCopy.charAt(artifactIdCopy.indexOf('-')+1));
@@ -35,7 +33,6 @@ public abstract class RestClient {
       }
       artifactIdCopy = artifactIdCopy.substring(0, artifactIdCopy.indexOf('-')) + upperCasedChar + lastPartOfString;
     }
-    System.out.println("Returning artifactIdCopy = " + artifactIdCopy);
     return artifactIdCopy;
   }
 

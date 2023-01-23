@@ -4,19 +4,19 @@ import eu.mansipi.meta_server.controllers.rest.Rest;
 import eu.mansipi.native_server.ApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import java.util.Random;
 
-@Component
+@RestController
 @Tag(name="meta", description = "API for calling other servers...")
-@Path("/meta")
+@RequestMapping("/meta")
 public class JokesAndRandomFactsController {
 
   @Operation
-  @GET @Path(("callAllServers"))
+  @GetMapping(("callAllServers"))
   public String getJokeAndFact() throws ApiException {
     reactor.core.publisher.Mono<String> fact = Rest.webclientServerClient().factsApi().getRandomFact();
     String joke = Rest.feignServerClient().jokesApi().getJokes(new Random().nextInt(3)); //Throwing error? https://github.com/OpenFeign/feign/issues/1042
@@ -25,13 +25,13 @@ public class JokesAndRandomFactsController {
   }
 
   @Operation
-  @GET @Path("triggerCallToSlowEndpointOnJokesServer")
+  @GetMapping("triggerCallToSlowEndpointOnJokesServer")
   public String triggerCallToSlowEndpointOnJokesServer(){
     return Rest.feignServerClient().sickServerApi().getSlowResponse(10000);
   }
 
   @Operation
-  @GET @Path("triggerCallToExceptionThrowingEndpointOnJokesServer")
+  @GetMapping("triggerCallToExceptionThrowingEndpointOnJokesServer")
   public String triggerCallToExceptionThrowingEndpointOnJokesServer(){
     try {
       return Rest.feignServerClient().sickServerApi().throwException();

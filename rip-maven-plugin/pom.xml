@@ -164,7 +164,7 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-webflux-core</artifactId>
-      <version>1.6.9</version>
+      <version>1.6.14</version>
     </dependency>
 
 
@@ -202,7 +202,20 @@
     <!-- for backwards compatibility check.-->
     <!--https://arnoldgalovics.com/introducing-swagger-brake/-->
     <!--https://arnoldgalovics.com/integrating-swagger-brake-into-maven-gradle-projects/-->
-    <dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>6.0.4</version>
+		</dependency>
+
+		<!--work in progress for SpringWebfluxApiDocumentor when invoking the spring-boot-maven-plugin to avoid the need for the project to add this dependency:-->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webflux-api</artifactId> <!--See https://springdoc.org/v2/#migrating-from-springdoc-v1 &ndash;&gt;-->
+			<version>2.0.2</version>
+		</dependency>
+
+		<dependency>
       <!-- added for bug finding-->
       <groupId>io.redskap</groupId>
       <artifactId>swagger-brake</artifactId>
@@ -261,7 +274,7 @@
     <dependency>
 			<groupId>org.springframework.boot</groupId> <!--For the-->
 			<artifactId>spring-boot-autoconfigure</artifactId>
-			<version>2.7.3</version>
+			<version>3.0.1</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.projectlombok</groupId>
@@ -273,7 +286,7 @@
       <!-- For SwaggerDocSpringResource's rest annotations -->
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-      <version>5.3.22</version>
+      <version>6.0.4</version>
     </dependency>
     <dependency>
       <!-- For SwaggerDocSpringResource's Mono type -->

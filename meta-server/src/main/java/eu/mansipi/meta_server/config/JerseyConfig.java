@@ -1,6 +1,6 @@
 package eu.mansipi.meta_server.config;
 
-import org.glassfish.jersey.server.ResourceConfig;
+/*import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -11,7 +11,7 @@ import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors;*/
 
 /**
  * The Spring-Jersey integration can be done in many ways it seems, and some versions of Spring and Jersey, respectively,
@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
  *
  * Testing: http://localhost:8080/doc/swagger/swagger.json
  */
-@Component
-public class JerseyConfig extends ResourceConfig implements ApplicationListener<ContextRefreshedEvent> {
-
-  @Override
+/*@Component*/
+public class JerseyConfig //extends ResourceConfig implements ApplicationListener<ContextRefreshedEvent> {
+{
+  /*@Override
   public void onApplicationEvent(ContextRefreshedEvent event) {
     ApplicationContext appContext = event.getApplicationContext();
     Set<Class<?>> resources =
@@ -44,7 +44,21 @@ public class JerseyConfig extends ResourceConfig implements ApplicationListener<
     System.out.println("The following Spring managed beans will be registered with Jersey: ");
     resources.stream().forEach(e -> System.out.println(e));
     registerClasses(resources);
+  }*/
+  /*@Override
+  public void onApplicationEvent(ContextRefreshedEvent event) {
+    ApplicationContext appContext = event.getApplicationContext();
+    Set<Object> resources =
+        Arrays.stream(appContext.getBeanDefinitionNames())
+            //.map(e -> appContext.getBean(e).getClass())
+            .filter(e -> isJaxRsResource(e.getClass()))
+            .collect(Collectors.toSet());
+    System.out.println("The following Spring managed beans will be registered with Jersey: ");
+    resources.stream().forEach(e -> System.out.println(e));
+    resources.stream().forEach(e -> register(e));
+    //register(resources);
   }
+
 
   private boolean isJaxRsResource(Class<?> clazz) {
     Annotation[] declaredAnnotations = clazz.getDeclaredAnnotations();
@@ -55,5 +69,5 @@ public class JerseyConfig extends ResourceConfig implements ApplicationListener<
     }
     return false;
   }
-
+*/
 }

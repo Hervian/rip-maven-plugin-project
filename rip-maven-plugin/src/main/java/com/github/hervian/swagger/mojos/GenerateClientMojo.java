@@ -206,6 +206,7 @@ public class GenerateClientMojo extends AbstractMojo {
     options.setArtifactPackaging(ArtifactPackaging.forPackaging(project.getPackaging()));
 
     try {
+      getLog().info(String.format("Downloading old api from binary repos %s and %s", GenerateDocMojo.getReleasesRepo(project), GenerateDocMojo.getSnapshotRepo(project)));
       artifactDownloaderHandler.handle(options);
     } catch (LatestArtifactDownloadException e){
       if (e.getCause() instanceof RuntimeException && e.getCause().getMessage().contains("Cannot get metadata")){

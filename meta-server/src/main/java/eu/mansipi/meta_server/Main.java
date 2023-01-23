@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 //TODO: Add Spring circuit breaking. https://arnoldgalovics.com/resilience4j-webclient/  https://spring.io/projects/spring-cloud-circuitbreaker
 @SpringBootApplication//(scanBasePackages = "com.example.java_17_server")
@@ -19,7 +21,8 @@ public class Main {
   public static void main(String[] args) {
     System.out.println(CacheEventLogger.class.getName());
     ConfigurableApplicationContext applicationContext = SpringApplication.run(Main.class, args);
-
+    List<String> mansipiResources = Arrays.stream(applicationContext.getBeanDefinitionNames()).map(e -> applicationContext.getBean(e).getClass().getName()).filter(str -> str.startsWith("eu")).collect(Collectors.toList());
+    mansipiResources.forEach(e -> System.out.println(e));
   }
 
   public static class CacheEventLogger

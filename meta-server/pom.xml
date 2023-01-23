@@ -23,7 +23,8 @@
   <properties>
     <maven.compiler.source>18</maven.compiler.source>
     <maven.compiler.target>18</maven.compiler.target>
-	<spring.boot.version>2.7.3</spring.boot.version>
+	<spring.boot.version>3.0.1</spring.boot.version>
+    <spring.security.version>6.0.1</spring.security.version>
     <!--<start-class>eu.mansipi.jokes_and_facts_server.Main</start-class>-->
   </properties>
 
@@ -68,10 +69,10 @@
       <version>1.0-SNAPSHOT</version>
     </dependency>
 
-    <dependency>
+    <!--<dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jersey</artifactId>
-    </dependency>
+    </dependency>-->
 
     <!--to import resilience4j decorators and circuit breaker-->
     <dependency>
@@ -119,12 +120,91 @@
       <version>2.0.2</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+      <!--<version>2.6.4</version>-->
+    </dependency>
+    <!--<dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-webflux-core</artifactId>
+      <version>1.6.14</version>
+    </dependency>-->
+
+    <!--below works. But trying to add this dynamically when invoking the spring-boot-maven-plugin in SpringWebfluxApiDocumentor (which should be renamed to cover spring mvn as well)-->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webflux-api</artifactId> <!--See https://springdoc.org/v2/#migrating-from-springdoc-v1 -->
+      <version>2.0.2</version>
+    </dependency>
+    <!--<dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-common</artifactId>
+      <version>2.0.2</version>
+    </dependency>-->
+
+
+
+    <!--After upgrading spring version from spring boot 2.7.3 to 3.0.1. Only needed because of the ExceptionMappers class&ndash;&gt;-->
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-web-api</artifactId>
+      <version>8.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+       <!--After upgrading spring version from spring boot 2.7.3 to 3.0.1: java.lang.ClassNotFoundException: javax.xml.bind.JAXBElement&ndash;&gt;-->
+        <dependency>
+          <groupId>jakarta.xml.bind</groupId>
+          <artifactId>jakarta.xml.bind-api</artifactId>
+          <version>3.0.0</version>
+        </dependency>
+
+    <!--After upgrading spring version from spring boot 2.7.3 to 3.0.1: java.lang.ClassNotFoundException: javax.xml.bind.JAXBElement-->
+   <dependency>
+     <groupId>org.glassfish.jaxb</groupId>
+     <artifactId>jaxb-runtime</artifactId>
+     <version>4.0.1</version>
+   </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.3.0</version>
+    </dependency>
+    <!--java.lang.ClassNotFoundException: com.sun.xml.internal.bind.v2.ContextFactory-->
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+
+    <!--After upgrading spring version from spring boot 2.7.3 to 3.0.1: java.lang.NoClassDefFoundError: javax/activation/DataHandler-->
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+  <!--
+        &lt;!&ndash;After upgrading spring version from spring boot 2.7.3 to 3.0.1: java.lang.ClassNotFoundException: jakarta.xml.bind.annotation.XmlElement&ndash;&gt;
+        <dependency>
+          <groupId>jakarta.platform</groupId>
+          <artifactId>jakarta.jakartaee-api</artifactId>
+          <version>10.0.0</version>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.glassfish.jaxb</groupId>
+          <artifactId>jaxb-runtime</artifactId>
+          <version>2.3.3</version>
+        </dependency>-->
+
 
     <!--For testing the cache aspect:-->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-cache</artifactId>
-      <version>2.7.3</version></dependency>
+      <version>${spring.boot.version}</version></dependency>
     <dependency>
       <groupId>javax.cache</groupId>
       <artifactId>cache-api</artifactId>
@@ -143,12 +223,66 @@
       <scope>test</scope>
     </dependency>
 
-
+    <!--&lt;!&ndash; Spring security &ndash;&gt;
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+      <version>${spring.security.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+      <version>${spring.security.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+      <version>${spring.security.version}</version>
+    </dependency>-->
 
   </dependencies>
 
   <build>
     <plugins>
+      <!--<plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        &lt;!&ndash;&lt;!&ndash;<configuration>
+        &lt;!&ndash;<directories>C:\Users\m83522\.m2\repository\org\springframework\boot\spring-boot-starter-webflux\2.7.0</directories>&ndash;&gt;
+      </configuration>&ndash;&gt;&ndash;&gt;
+        <executions>
+          <execution>
+            <id>pre-integration-test</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-integration-test</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <outputFileName>openapi.json</outputFileName>
+          <outputDir>${project.build.directory}/openapi-spec</outputDir>
+          <apiDocsUrl>http://localhost:8080/v3/api-docs</apiDocsUrl>
+        </configuration>
+      </plugin>-->
       <plugin>
         <groupId>com.github.hervian</groupId>
         <artifactId>rip-maven-plugin</artifactId>
@@ -159,24 +293,17 @@
               <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
             </additionalDocs>
             <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
-            <restAnnotationType>SPRING_JAX_RS</restAnnotationType>
           </generateDocConfig>
-          <!--<generateUiConfig>
-            <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
-          </generateUiConfig>-->
           <generateClientConfig>
             <languages>
               <language>JAVA</language>
-              <language>DART</language>
+             <!-- <language>DART</language>-->
             </languages>
           </generateClientConfig>
         </configuration>
         <executions>
           <execution>
             <goals>
-              <!--<goal>generateDoc</goal>&lt;!&ndash;Mandatory goal. Bound to Compile phase. Optional configuration: 1) Add @io.swagger.v3.oas.annotations.OpenAPIDefinition annotation anywhere in your source code to customize the generated swagger doc. 2) Add other swagger annotations to your REST methods to add detailed documentation (@Api, @ApiOperation etc). Note that both requires that you add the relevant dependency to get those annotations on the classpath if not already present. &ndash;&gt;
-              <goal>generateUi</goal>&lt;!&ndash;Optional goal. Bound to Compile phase.&ndash;&gt;
-              <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
               <goal>generateRest</goal>
               <goal>rip</goal>
             </goals>

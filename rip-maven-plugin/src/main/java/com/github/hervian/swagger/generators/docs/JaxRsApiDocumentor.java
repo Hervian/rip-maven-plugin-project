@@ -51,7 +51,7 @@ public class JaxRsApiDocumentor implements OpenApiDocumentGenerator {
         element(name("outputFormats"), "JSON"),
         element(name("prettyPrint"), "true"),
         element(name("resourcePackages"), resourcePackagesAsElements)
-        ,element(name("swaggerConfig"),
+        ,element(name("swaggerConfig"), //See https://github.com/openapi-tools/swagger-maven-plugin. Note that the invoked mojo also picks up any OpenApiDefinition annotation which is another way to configure the open api json meta data
           element(name("info"),
             element(name("title"), project.getName() + " REST API"),
             element(name("version"), project.getVersion()),
