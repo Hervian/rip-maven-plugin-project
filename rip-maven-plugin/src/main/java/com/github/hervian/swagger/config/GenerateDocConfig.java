@@ -57,10 +57,17 @@ public class GenerateDocConfig {
   //TODO: make it possible to configure a profile that is used to start up the server and get the swagger.json
 
   public enum AdditionalDoc { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
-    NONE,
-    HTML,
-    HTML2,
-    CWIKI //Confluence wiki docs
+    NONE(""),
+    HTML("html"),
+    HTML2("html"),
+    CWIKI("cwiki"); //Confluence wiki docs
+
+    @Getter
+    private String fileExtension;
+
+    private AdditionalDoc(String fileExtension){
+      this.fileExtension = fileExtension;
+    }
   }
 
   @Parameter(defaultValue = "HTML2")

@@ -338,7 +338,7 @@ public class GenerateClientMojo extends AbstractMojo implements PluginExecutionI
               .generateDocConfig(
                   GenerateDocConfig
                       .builder()
-                      .additionalDocs(Lists.newArrayList())
+                      .additionalDocs(Lists.newArrayList(GenerateDocConfig.AdditionalDoc.NONE))
                       .restAnnotationType(GenerateDocConfig.RestAnnotationType.SPRING) //That is: make the generateDoc mojo download the swagger.json
                       .skipCheckForBreakingChanges(true)
                       .skipGenerationOfOpenApiResource(true)

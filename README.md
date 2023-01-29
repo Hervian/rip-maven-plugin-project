@@ -15,3 +15,5 @@ Test if a pure rip-maven-plugin setup works with spring-security etc.
 
 Change generateRestDoc - restAnnotationType should only relate to the annotations
 The config of download of json vs generation of json should be a separate param.
+
+breaking api changes check should be extracted to a mojo called verifyVersion

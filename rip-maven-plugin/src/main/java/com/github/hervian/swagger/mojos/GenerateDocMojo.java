@@ -1,6 +1,5 @@
 package com.github.hervian.swagger.mojos;
 
-import com.github.hervian.rip.tasks.ap.OpenApiDefinitionAnnotationProcessor;
 import com.github.hervian.swagger.compilation.ClassFileCopier;
 import com.github.hervian.swagger.config.GenerateClientConfig;
 import com.github.hervian.swagger.config.GenerateDocConfig;
@@ -10,6 +9,7 @@ import com.github.hervian.swagger.generators.docs.JaxRsApiDocumentor;
 import com.github.hervian.swagger.generators.docs.OpenApiDocumentGenerator;
 import com.github.hervian.swagger.generators.docs.RestEndpointCallingOpenApiDocumentGenerator;
 import com.github.hervian.swagger.services.OpenApiConfig;
+import com.github.hervian.swagger.util.CodeScanner;
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
 import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -70,18 +70,6 @@ public class GenerateDocMojo extends AbstractMojo {
   @Component
   private BuildPluginManager pluginManager;
 
-    /*@Parameter(required = true)
-    private List<String> resourcePackages;
-
-    public enum AdditionalDoc { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
-        NONE,
-        HTML,
-        HTML2,
-        CWIKI //Confluence wiki docs
-    }
-    @Parameter(defaultValue = "HTML2")
-    private List<AdditionalDoc> additionalDocs;*/
-
   @Parameter
   private GenerateDocConfig generateDocConfig;
 
@@ -99,8 +87,17 @@ public class GenerateDocMojo extends AbstractMojo {
     getLog().info("Executing GenerateDocMojo (generates swagger.json (using io.openapitools.swagger:swagger-maven-plugin), additional docs as configured and a jax-rs annotated class to server the swagger.json doc etc.)");
     validatePhaseAndGoals();
 
-    if (!generateDocConfig.isSkipCreateOpenApiDefinition() && !OpenApiDefinitionAnnotationProcessor.openApiDefinitionAnnotationIsPresentInCompilationUnit) {
-      generateOpenApiConfigClass();
+    if (!generateDocConfig.isSkipCreateOpenApiDefinition()) {
+      List<String> openApiDefinitionAnnotatedClasses = CodeScanner.findOpenAPIDefinitionAnnotations(project);
+      System.out.println("OpenAPIDefinition(s) found: "+String.join(",", openApiDefinitionAnnotatedClasses));
+      if (openApiDefinitionAnnotatedClasses.isEmpty()) {
+        getLog().info("No OpenAPIDefinition annotations found. An @OpenAPIDefinition annotated class will be generated. The description, version, title etc will be taken from the pom file.");
+        generateOpenApiConfigClass();
+      } else {
+        getLog().info("OpenAPIDefinition(s) found: "+String.join(",", openApiDefinitionAnnotatedClasses)+"\nSkipping generation of OpenAPIDefinition annotated class.");
+      }
+    } else {
+      getLog().info("Skipping generation of OpenAPIDefinition annotated class since the GenerateDocConfig param isSkipCreateOpenApiDefinition is set to true.");
     }
     
     getLog().info("generating swagger.json document");
@@ -114,14 +111,14 @@ public class GenerateDocMojo extends AbstractMojo {
       failBuildOnUnflaggedBreakingChanges();
     }
 
-    if (generateDocConfig.getAdditionalDocs()!=null){
+    if (generateDocConfig.getAdditionalDocs()!=null && !generateDocConfig.getAdditionalDocs().isEmpty()){
       for (GenerateDocConfig.AdditionalDoc additionalDoc: generateDocConfig.getAdditionalDocs()){
         if (GenerateDocConfig.AdditionalDoc.NONE!=additionalDoc){
           getLog().info("generating swagger." + additionalDoc.name()); //duration: ca 4 seconds doc type
           generateAdditionalDocsFromSwaggerJsonDoc(additionalDoc);
 
           getLog().info("copying swagger.html document to build output dir");
-          copySwaggerDocToBuildOutputDir("index." + additionalDoc.name().toLowerCase(), "swagger." + additionalDoc.name().toLowerCase());
+          copySwaggerDocToBuildOutputDir("index." + additionalDoc.getFileExtension(), "swagger." + additionalDoc.getFileExtension());
         }
       }
     }
