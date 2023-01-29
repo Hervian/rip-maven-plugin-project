@@ -3,13 +3,11 @@ package com.github.hervian.rip;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hervian.rip.tasks.GenerateClientTask;
 import com.github.hervian.rip.tasks.GenerateDocTask;
-import com.github.hervian.rip.tasks.GenerateUiTask;
 import com.github.hervian.rip.tasks.Task;
-import com.github.hervian.rip.tasks.config.GenerateRestConfig;
-import com.github.hervian.swagger.config.GenerateClientConfig;
-import com.github.hervian.swagger.config.GenerateDocConfig;
-import com.github.hervian.swagger.config.GenerateUiConfig;
-import com.github.hervian.swagger.config.PropertiesReader;
+import com.github.hervian.rip.config.GenerateClientConfig;
+import com.github.hervian.rip.config.GenerateDocConfig;
+import com.github.hervian.rip.config.GenerateUiConfig;
+import com.github.hervian.rip.config.PropertiesReader;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
@@ -31,6 +29,10 @@ import org.apache.maven.project.MavenProject;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * One Mojo to rule them all.
+ * This mojo calls all the other (except the GenerateRestMojo which runs before the compile phase...)
+ */
 @Mojo(name = "rip",
   requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
   defaultPhase = LifecyclePhase.PREPARE_PACKAGE,

@@ -1,6 +1,6 @@
 package com.github.hervian.rip.tasks;
 
-import com.github.hervian.swagger.mojos.GenerateClientMojo;
+import com.github.hervian.rip.GenerateClientMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class GenerateClientTask implements Task {

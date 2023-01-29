@@ -423,7 +423,13 @@
 							<outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${project.build.sourceDirectory}/com/github/hervian/swagger/services</directory>
+									<directory>${project.build.sourceDirectory}/com/github/hervian/rip/doc/src</directory>
+									<includes>
+										<include>*</include>
+									</includes>
+								</resource>
+								<resource>
+									<directory>${project.build.sourceDirectory}/com/github/hervian/rip/ui/src</directory>
 									<includes>
 										<include>*</include>
 									</includes>

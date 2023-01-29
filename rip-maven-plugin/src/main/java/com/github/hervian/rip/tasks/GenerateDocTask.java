@@ -1,6 +1,6 @@
 package com.github.hervian.rip.tasks;
 
-import com.github.hervian.swagger.mojos.GenerateDocMojo;
+import com.github.hervian.rip.GenerateDocMojo;
 import com.google.common.collect.Lists;
 import org.apache.maven.plugin.MojoExecutionException;
 

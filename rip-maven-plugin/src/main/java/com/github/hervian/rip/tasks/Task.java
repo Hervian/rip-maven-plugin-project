@@ -1,10 +1,9 @@
 package com.github.hervian.rip.tasks;
 
-import com.github.hervian.rip.tasks.config.GenerateRestConfig;
-import com.github.hervian.swagger.config.GenerateClientConfig;
-import com.github.hervian.swagger.config.GenerateDocConfig;
-import com.github.hervian.swagger.config.GenerateUiConfig;
-import com.github.hervian.swagger.config.PropertiesReader;
+import com.github.hervian.rip.config.GenerateClientConfig;
+import com.github.hervian.rip.config.GenerateDocConfig;
+import com.github.hervian.rip.config.GenerateUiConfig;
+import com.github.hervian.rip.config.PropertiesReader;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.maven.execution.MavenSession;

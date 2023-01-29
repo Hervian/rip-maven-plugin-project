@@ -1,8 +1,6 @@
 package com.github.hervian.rip.tasks;
 
-import com.github.hervian.swagger.mojos.GenerateDocMojo;
-import com.github.hervian.swagger.mojos.GenerateUiMojo;
-import com.google.common.collect.Lists;
+import com.github.hervian.rip.GenerateUiMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class GenerateUiTask implements Task {
