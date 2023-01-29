@@ -1,6 +1,5 @@
 package com.github.hervian.swagger.services;
 
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import javax.ws.rs.GET;
@@ -25,44 +24,48 @@ import org.springframework.util.StreamUtils;
 
 @ConditionalOnProperty(value = "swagger.ui.disabled", havingValue = "false", matchIfMissing = true) //Give Spring users an option to exclude swagger-ui from, say deployments to prod environment by setting swagger.ui.disabled=true in application-prod
 @Component
-@Path("/openapi") //TODO: Insert configurable base path? If done, remember to update GenerateSwaggerDocMojo which has a hard coded reference to 'doc' when specifying the url of the swagger.json in the index.html
+@Path("openapi")
 public class SwaggerDocJaxRsResource  {
-
-  @Value("${server.port}")
-  private int serverPort;
 
   @Context //What is the equivalent of @Context UriInfo in Spring Rest: https://stackoverflow.com/q/34690109/6095334
   UriInfo uriInfo;
 
+  @Value("${server.port}")
+  private int serverPort;
+
   @EventListener({ApplicationReadyEvent.class})
   public void logPathToSwaggerUi() {
-    System.out.println("Swagger.json is available at .../openapi/swagger.json");
+    System.out.println("Swagger.json is available at ...${apiDocsUrl}");
+    System.out.println("Swagger.html is available at .../openapi/swagger.html");
   }
 
   //TODO: parse inputStream/file into string and make a search-and-replace on the port number of the server such as to insert the actual port of the running app. See com.github.hervian.swagger.services.SwaggerDocSpringResource
   @Operation(hidden = true)
   @GET @Path("/swagger.json") @Produces("application/json")
   public Response getSwaggerJson() throws IOException {
-    ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-    InputStream resource = classloader.getResourceAsStream("swagger/swagger.json");
-    /*System.out.println("swagger.json resource!=null: "+Boolean.valueOf(resource!=null));
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        InputStream resource = classloader.getResourceAsStream("${swagger.json.path}"); //TODO: This string should be centralized in GenerateDocMojo which generates the referenced file.
+        /*System.out.println("swagger.json resource!=null: "+Boolean.valueOf(resource!=null));
     return resource;*/
-    String swaggerJson = StreamUtils.copyToString(resource, Charset.forName("UTF-8"));
-    swaggerJson = swaggerJson.replace("localhost:8080", "http://localhost:"+serverPort + "/");
-    return Response.ok(swaggerJson.getBytes(StandardCharsets.UTF_8)).build();
-  }
+            String swaggerJson = StreamUtils.copyToString(resource, Charset.forName("UTF-8"));
+        swaggerJson = swaggerJson.replace("localhost:8080", "http://localhost:"+serverPort + "/");
+        return Response.ok(swaggerJson.getBytes(StandardCharsets.UTF_8)).build();
+      }
+
+
 
   @Operation(hidden = true)
   @GET @Path("/swagger.html") @Produces("text/html")
   public Response getSwaggerHtml() throws IOException {
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     String path = uriInfo.getPath().substring(uriInfo.getPath().indexOf("/")+1);
+
     System.out.println("uriInfo.getPath() = " + uriInfo.getPath());
     System.out.println("uriInfo.getPath().substring(uriInfo.getPath().indexOf(\"/\")+1) = " + path);
-    InputStream inputStream = classloader.getResourceAsStream("swagger/" + path);
+
+    InputStream inputStream = classloader.getResourceAsStream("swagger/swagger.html"); // + path); //TODO: This string should be centralized in GenerateDocMojo which generates the referenced file.
     File swaggerHtmlFile = File.createTempFile("swagger", "html");
     swaggerHtmlFile.deleteOnExit();
-    //FileUtils.copyInputStreamToFile(inputStream, swaggerHtmlFile);
     copyInputStreamToFile(inputStream, swaggerHtmlFile);
 
     Response.ResponseBuilder response = Response.ok((Object) swaggerHtmlFile);

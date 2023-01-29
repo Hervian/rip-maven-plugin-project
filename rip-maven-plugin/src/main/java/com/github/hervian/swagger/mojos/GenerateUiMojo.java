@@ -212,7 +212,12 @@ public class GenerateUiMojo extends AbstractMojo {
       //https://stackoverflow.com/a/50510597/6095334
       //String javascriptExpForGettingPathToJson = "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger/swagger.json'";
       //content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.protocol + '//' + window.location.host + '/doc/swagger/swagger.json'");
-      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger.json'");
+      /**
+       * If generateDocMojo has been run then a jax-rs endpoint has been created that exposes the generated json doc at /swagger.json.
+       * Else, in those cases where the plugin user has created their own doc and endpoint (fx using springfox, springdox or some plugin) then the path must be configured and used here.
+       *
+       */
+      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/\")) + '/swagger.json'"); //TODO: If generateDocMojo has not run this should be changed to whatever the plugin user has configured. Like fx springdoc's 'v3/api-docs', i.e. GenerateDocConfig.apiDocsUrl
       // content = content.replaceAll("\"./swagger-ui", "\"./swagger/ui/swagger-ui");
       content = content.replaceAll("href=\"./", "href=\"./swagger/ui/");
       content = content.replaceAll("src=\"./", "src=\"./swagger/ui/");

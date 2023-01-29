@@ -49,6 +49,13 @@ public class GenerateClientConfig {
 
   }
 
+  /**
+   * Only set this parameter if you are not using the generateDocMojo. The generateDocMojo will generate or download  the json doc and make it available at a specific path.
+   * But if you have made it available on a nother opath
+   */
+  @Parameter
+  private String pathToOpenApiDoc;
+
   @Parameter(defaultValue = "JAVA")
   private List<Language> languages = Lists.newArrayList(Language.JAVA);
 

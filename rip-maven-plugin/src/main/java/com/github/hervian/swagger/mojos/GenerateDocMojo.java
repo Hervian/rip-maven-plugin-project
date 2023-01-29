@@ -1,5 +1,6 @@
 package com.github.hervian.swagger.mojos;
 
+import com.github.hervian.rip.tasks.ap.OpenApiDefinitionAnnotationProcessor;
 import com.github.hervian.swagger.compilation.ClassFileCopier;
 import com.github.hervian.swagger.config.GenerateClientConfig;
 import com.github.hervian.swagger.config.GenerateDocConfig;
@@ -7,18 +8,14 @@ import com.github.hervian.swagger.config.PropertiesReader;
 import com.github.hervian.swagger.generators.docs.DocumentGeneratorInput;
 import com.github.hervian.swagger.generators.docs.JaxRsApiDocumentor;
 import com.github.hervian.swagger.generators.docs.OpenApiDocumentGenerator;
-import com.github.hervian.swagger.generators.docs.SpringWebfluxApiDocumentor;
+import com.github.hervian.swagger.generators.docs.RestEndpointCallingOpenApiDocumentGenerator;
 import com.github.hervian.swagger.services.OpenApiConfig;
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
 import com.google.common.collect.Lists;
-import io.swagger.util.Yaml;
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.parser.OpenAPIV3Parser;
 import lombok.Data;
-import lombok.SneakyThrows;
+import lombok.Getter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
@@ -33,8 +30,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +38,6 @@ import java.util.List;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
@@ -56,6 +50,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
   requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.COMPILE, threadSafe = true)
 public class GenerateDocMojo extends AbstractMojo {
 
+  @Getter
   private PropertiesReader propertiesReader;
 
   public GenerateDocMojo() throws MojoExecutionException {
@@ -93,7 +88,9 @@ public class GenerateDocMojo extends AbstractMojo {
   @Parameter
   private GenerateClientConfig generateClientConfig;
 
-  private static final String openapiDocFileName = "swagger.json";
+  public static final String openapiDocFileName = "swagger.json";
+  private static final String openApiDocPath = "swagger/";
+  public static final String swagerJsonFilePath = openApiDocPath + openapiDocFileName;
 
   List<String> listOfGoals;
 
@@ -102,15 +99,15 @@ public class GenerateDocMojo extends AbstractMojo {
     getLog().info("Executing GenerateDocMojo (generates swagger.json (using io.openapitools.swagger:swagger-maven-plugin), additional docs as configured and a jax-rs annotated class to server the swagger.json doc etc.)");
     validatePhaseAndGoals();
 
-    //TODO: if (!openApiDefinitionAnnotationFound()) { Create AbstractProcessor that sets this value
-    generateOpenApiConfigClass();
+    if (!generateDocConfig.isSkipCreateOpenApiDefinition() && !OpenApiDefinitionAnnotationProcessor.openApiDefinitionAnnotationIsPresentInCompilationUnit) {
+      generateOpenApiConfigClass();
+    }
     
     getLog().info("generating swagger.json document");
     File swaggerFile = generateSwaggerDoc(); //duration: ca 5 seconds
     //enrichGeneratedSwaggerDoc(swaggerFile);
     getLog().info("copying generated swagger.json document to build output folder");
-    copySwaggerDocToBuildOutputDir(openapiDocFileName); // duration: ca 0 seconds
-
+    copySwaggerDocToBuildOutputDir(); // duration: ca 0 seconds
     if (!generateDocConfig.isSkipCheckForBreakingChanges()){
       String packaging = project.getPackaging();
       System.out.println("packaging: "+ packaging);
@@ -122,20 +119,25 @@ public class GenerateDocMojo extends AbstractMojo {
         if (GenerateDocConfig.AdditionalDoc.NONE!=additionalDoc){
           getLog().info("generating swagger." + additionalDoc.name()); //duration: ca 4 seconds doc type
           generateAdditionalDocsFromSwaggerJsonDoc(additionalDoc);
+
+          getLog().info("copying swagger.html document to build output dir");
+          copySwaggerDocToBuildOutputDir("index." + additionalDoc.name().toLowerCase(), "swagger." + additionalDoc.name().toLowerCase());
         }
       }
     }
 
-    getLog().info("copying swagger.html document to build output dir");
-    copySwaggerDocToBuildOutputDir("index.html", "swagger.html");
-
-    getLog().info("generating SwaggerDocJaxRsResource class (i.e. a class with jax-rs annotated method that serves the swagger.json)");
-    copySwaggerDocJaxRsResourceToBuildOutputDir(); //duration: ca 1 second
+    if (generateDocConfig.isSkipGenerationOfOpenApiResource()) {
+      getLog().info("Skipping creation of swagger doc resource / endpoint as per configuration [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
+    } else {
+      getLog().info("generating SwaggerDocJaxRsResource class (i.e. a class with jax-rs annotated method that serves the swagger.html etc)  [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
+      copySwaggerDocJaxRsResourceToBuildOutputDir(); //duration: ca 1 second
+    }
 
     //Below seems to fail in current test. May be necessary to add CDATA to generated html before invoking below conversion: https://stackoverflow.com/a/16303854/6095334
     //HtmlToPdf.builder().project(project).build().execute();
   }
 
+  @Deprecated
   private void generateOpenApiConfigClass() throws MojoExecutionException {
     getLog().info("Copying OpenApiConfig class to target folder.");
     ClassFileCopier classFileCopier = ClassFileCopier.
@@ -154,7 +156,8 @@ public class GenerateDocMojo extends AbstractMojo {
   }
 
   /**
-   * Does not work. Delete
+   * TODO: Insted of this, make the plugin create the OpenAPiDefiinition annotated OpenApiConfig class of no such anno is already present (detect this via AbstractProcessor)
+   * and then transfer all the info from pom to that anno. Make a default choice about security but make it configurable.
    * @param dest
    * @throws MojoExecutionException
    */
@@ -234,6 +237,7 @@ public class GenerateDocMojo extends AbstractMojo {
     }
   }
 
+  //@Deprecated
   private File generateSwaggerDoc() throws MojoExecutionException {
     DocumentGeneratorInput input = DocumentGeneratorInput
       .builder()
@@ -241,11 +245,12 @@ public class GenerateDocMojo extends AbstractMojo {
       .mavenSession(mavenSession)
       .pluginManager(pluginManager)
       .project(project)
+      .propertiesReader(propertiesReader)
       .generateDocConfig(generateDocConfig)
       .outputDir(getSwaggerDocDir())
       .build();
 
-    OpenApiDocumentGenerator openApiDocumentGenerator = isSpringWithJaxRsProject() ? new JaxRsApiDocumentor() : new SpringWebfluxApiDocumentor();
+    OpenApiDocumentGenerator openApiDocumentGenerator = isSpringWithJaxRsProject() ? new JaxRsApiDocumentor() : new RestEndpointCallingOpenApiDocumentGenerator();
     openApiDocumentGenerator.generate(input);
     File swaggerFile = new File(getSwaggerDocDir()+"/" + openapiDocFileName);
     return swaggerFile;
@@ -262,7 +267,7 @@ public class GenerateDocMojo extends AbstractMojo {
       plugin(
         groupId("org.openapitools"),
         artifactId("openapi-generator-maven-plugin"),
-        version("5.4.0") //TODO get values from PropertiesReader
+        version(propertiesReader.getOrgOpenapitoolsVersion())//"5.4.0")
       ),
       goal("generate"),
       configuration(
@@ -285,14 +290,14 @@ public class GenerateDocMojo extends AbstractMojo {
    * itself in these late phases. Based on this answer: https://stackoverflow.com/a/49724374/6095334
    * @throws MojoExecutionException
    */
-  private void copySwaggerDocToBuildOutputDir(String fileName) throws MojoExecutionException {
-    copySwaggerDocToBuildOutputDir(fileName, fileName);
+  private void copySwaggerDocToBuildOutputDir() throws MojoExecutionException {
+    copySwaggerDocToBuildOutputDir(openapiDocFileName, openapiDocFileName);
   }
 
   private void copySwaggerDocToBuildOutputDir(String fileName, String destinationFileName) throws MojoExecutionException {
     try {
       File swaggerFile = new File(getSwaggerDocDir()+"/" + fileName);
-      File swaggerFileDestination = new File(project.getBuild().getOutputDirectory()+"/swagger/" + destinationFileName);
+      File swaggerFileDestination = new File(project.getBuild().getOutputDirectory()+"/" +openApiDocPath + destinationFileName);
 
       FileUtils.copyFile(swaggerFile, swaggerFileDestination);
       getLog().info(String.format("copied from: %s to: %s", swaggerFile, swaggerFileDestination));
@@ -315,6 +320,8 @@ public class GenerateDocMojo extends AbstractMojo {
       .build();
     Class<?> restType = generateDocConfig.getRestAnnotationType().getSwaggerDocResource();
     String sourceCodeWithCorrectedPackage = classFileCopier.getSourceCode(restType);
+    sourceCodeWithCorrectedPackage = sourceCodeWithCorrectedPackage.replace("${apiDocsUrl}", generateDocConfig.getApiDocsUrl());
+    sourceCodeWithCorrectedPackage = sourceCodeWithCorrectedPackage.replace("${swagger.json.path}", GenerateDocMojo.swagerJsonFilePath);
     classFileCopier.copyResourceToBuildOutputDir(restType.getSimpleName(), sourceCodeWithCorrectedPackage, generateDocConfig.getRestAnnotationType().getRestAnnotationTypes());
   }
 

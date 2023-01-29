@@ -35,7 +35,7 @@ public interface Task {
     private GenerateDocConfig generateDocConfig;
     private GenerateUiConfig generateUiConfig;
     private GenerateClientConfig generateClientConfig;
-    private GenerateRestConfig wrapClientsConfig;
+    //private GenerateRestConfig wrapClientsConfig;
   }
 
 }

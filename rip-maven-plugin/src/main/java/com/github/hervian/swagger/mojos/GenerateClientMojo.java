@@ -1,6 +1,9 @@
 package com.github.hervian.swagger.mojos;
 
+import com.github.hervian.rip.tasks.GenerateDocTask;
+import com.github.hervian.rip.tasks.Task;
 import com.github.hervian.swagger.config.GenerateClientConfig;
+import com.github.hervian.swagger.config.GenerateDocConfig;
 import com.github.hervian.swagger.config.PropertiesReader;
 import com.github.hervian.swagger.generators.ClientGenerator;
 import com.github.hervian.swagger.generators.ClientGeneratorInput;
@@ -9,6 +12,7 @@ import com.github.hervian.swagger.generators.JavaClientGenerator;
 import com.github.hervian.swagger.generators.DartClientGenerator;
 import com.github.hervian.swagger.installers.ClientInstaller;
 import com.github.hervian.swagger.publishers.ClientPublisher;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.openapitools.swagger.OutputFormat;
 import io.redskap.swagger.brake.core.CoreConfiguration;
@@ -25,6 +29,7 @@ import lombok.Data;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecution;
@@ -70,7 +75,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 @Data
 @Mojo(name = "generateClient", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.COMPILE, threadSafe = true)
-public class GenerateClientMojo extends AbstractMojo {
+public class GenerateClientMojo extends AbstractMojo implements PluginExecutionInfoProvider {
   private final Logger LOGGER = LoggerFactory.getLogger(GenerateClientMojo.class);
 
   @Parameter(defaultValue = "${project}", required = true, readonly = true)
@@ -110,10 +115,9 @@ public class GenerateClientMojo extends AbstractMojo {
     boolean apiIsDifferentThanLastVersion;
     if (cmdLineGoals.contains("swagger:generateClient") || (apiIsDifferentThanLastVersion=apiIsDifferentThanLastVersion() && phaseIsLaterThanCompile(cmdLineGoals))){ //TODO: what about package goal?
       getLog().info("generating a client code for your server since new api contains changes compared to last version.");
-//TODO: If java genJavaClient, if Dart genDartClient
+
       List<ClientGeneratorOutput> clientGeneratorOutputs = generateClient();
-      //postProcessClient(outputPath);
-      //if (generateClientConfig.getLanguages().contains(GenerateClientConfig.Language.JAVA)){//install/deploy java
+
       for (ClientGeneratorOutput clientGeneratorOutput: clientGeneratorOutputs) {
         if (cmdLineGoals == null || cmdLineGoals.contains("install")) {
           ClientInstaller.ClientInstallerInput clientInstallerInput =
@@ -219,7 +223,7 @@ public class GenerateClientMojo extends AbstractMojo {
 
     System.out.println("Path to old api file: " + options.getOldApiPath());
 
-    String oldApi = options.getOldApiPath(), newApi = getPathToSwaggerDoc();
+    String oldApi = options.getOldApiPath(), newApi = getPathToSwaggerDoc(true);
     getLog().info("oldApi path = " + oldApi);
     getLog().info("newApi path = " + newApi);
     try {
@@ -272,7 +276,7 @@ public class GenerateClientMojo extends AbstractMojo {
     ClientGeneratorInput clientGeneratorInput = ClientGeneratorInput.builder()
       .log(getLog())
       .propertiesReader(propertiesReader)
-      .pathToSwaggerDoc(getPathToSwaggerDoc())
+      .pathToSwaggerDoc(getPathToSwaggerDoc(true))
       .project(project)
       .mavenSession(mavenSession)
       .pluginManager(pluginManager)
@@ -291,8 +295,62 @@ public class GenerateClientMojo extends AbstractMojo {
     return clientGeneratorOutputs;
   }
 
-  private String getPathToSwaggerDoc() {
-    return project.getBuild().getOutputDirectory()+"/swagger/swagger.json";
+  /**
+   * If the generateDocMojo has run that mojo will have created a swagger.file at GenerateDocMojo.openApiDocPath + GenerateDocMojo.openApiDocFileName
+   * If the generateDocMojo has been configured to not run then the scenario is that the plugin user have themselves generated this file and made it avaiable at some configured path.
+   * @return
+   */
+  private String getPathToSwaggerDoc(boolean callGenerateDocMojoIfOpenApiDocIsNotFound) throws MojoExecutionException {
+    String path = Strings.isNullOrEmpty(generateClientConfig.getPathToOpenApiDoc()) ? (GenerateDocMojo.swagerJsonFilePath) : generateClientConfig.getPathToOpenApiDoc();
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+
+    File fileInGeneratedSourcesFolder = new File(project.getBuild().getDirectory() + path);
+    getLog().info("file: " + fileInGeneratedSourcesFolder.getAbsolutePath() + (fileInGeneratedSourcesFolder.exists() ? " exists" : " does not exist."));
+    if (fileInGeneratedSourcesFolder.exists()) {
+      return fileInGeneratedSourcesFolder.getAbsolutePath();
+    }
+    File fileInClassesDir = new File(project.getBuild().getOutputDirectory() + path);
+    getLog().info("file: " + fileInClassesDir.getAbsolutePath() + (fileInClassesDir.exists() ? " exists" : " does not exist."));
+    if (fileInClassesDir.exists()) {
+      return fileInClassesDir.getAbsolutePath();
+    }
+
+    if (callGenerateDocMojoIfOpenApiDocIsNotFound) {
+      /**
+       * Ok, so we could not find the swagger.json file.
+       * One possible reason could be that the project using the rip-maven-plugin has not configured the generateDoc mojo
+       * to run because the project fx is based on springdoc dependencies which adds an endpoint that generates the
+       * swagger.json at runtime when the endpoint is first called.
+       * The user could have configured the generateDoc mojo to run and set generateDocConfig.restAnnotationType=SPRING.
+       * This would cause the logic to start up the server and download the json.
+       * Let us call the generateDoc mojo to achieve the same:
+       */
+      Task.TaskInput taskInput =
+          Task.TaskInput
+              .builder()
+              .propertiesReader(propertiesReader)
+              .project(project)
+              .log(getLog())
+              .mavenSession(mavenSession)
+              .pluginManager(pluginManager)
+              .generateDocConfig(
+                  GenerateDocConfig
+                      .builder()
+                      .additionalDocs(Lists.newArrayList())
+                      .restAnnotationType(GenerateDocConfig.RestAnnotationType.SPRING) //That is: make the generateDoc mojo download the swagger.json
+                      .skipCheckForBreakingChanges(true)
+                      .skipGenerationOfOpenApiResource(true)
+                      .skipCreateOpenApiDefinition(true)
+                      .build())
+              .build();
+      System.out.println("taskInput.getGenerateDocConfig().getApiDocsUrl()=" + taskInput.getGenerateDocConfig().getApiDocsUrl());
+      new GenerateDocTask().execute(taskInput);
+      return getPathToSwaggerDoc(false);
+    }
+    throw new MojoExecutionException("Unable to find the swagger.json dir. Was neither at:\n" +
+        fileInGeneratedSourcesFolder.getAbsolutePath() + "\nnor at \n" + fileInClassesDir.getAbsolutePath());
   }
 
 }

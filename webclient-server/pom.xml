@@ -114,7 +114,13 @@
               <!--<goal>generateDoc</goal>&lt;!&ndash;Mandatory goal. Bound to Compile phase. Optional configuration: 1) Add @io.swagger.v3.oas.annotations.OpenAPIDefinition annotation anywhere in your source code to customize the generated swagger doc. 2) Add other swagger annotations to your REST methods to add detailed documentation (@Api, @ApiOperation etc). Note that both requires that you add the relevant dependency to get those annotations on the classpath if not already present. &ndash;&gt;
               <goal>generateUi</goal>&lt;!&ndash;Optional goal. Bound to Compile phase.&ndash;&gt;
               <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
-              <goal>rip</goal>
+              <!--
+                In this project we are testing that the plugin supports the use case where the project does not want the
+                plugin to handle generation if swagger.json and swagger-ui.
+                Instead, the user generates those via standard springdoc dependencies and uses the rip-maven-plugin to
+                generate the client.
+              -->
+              <goal>generateClient</goal>
             </goals>
           </execution>
         </executions>

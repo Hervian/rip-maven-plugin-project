@@ -60,13 +60,43 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>com.github.kongchen</groupId>
+        <artifactId>swagger-maven-plugin</artifactId>
+        <version>3.1.8</version>
+        <configuration>
+          <apiSources>
+            <apiSource>
+              <springmvc>false</springmvc>
+              <locations><location>eu.mansipi.feign_server.controllers.JokesController</location></locations>
+                <host>/</host>
+                <outputPath>/openapi</outputPath>
+                <swaggerDirectory>${project.build.directory}/openapi</swaggerDirectory>
+              <outputFormats>json</outputFormats>
+                <info>
+                  <title>${project.build.finalName}</title>
+                  <description>${project.description}</description>
+                  <version>${project.version}</version>
+                </info>
+            </apiSource>
+          </apiSources>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>com.github.hervian</groupId>
         <artifactId>rip-maven-plugin</artifactId>
         <version>${project.parent.version}</version>
         <configuration>
           <generateDocConfig>
             <!--<resourcePackages>
-              <resourcePackage>dk.tdc.chub.exposure.v1</resourcePackage>
+              <resourcePackage>eu.mansipi.meta-server.controllers</resourcePackage>
             </resourcePackages>-->
             <additionalDocs>
               <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
@@ -78,6 +108,7 @@
             <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
           </generateUiConfig>-->
           <generateClientConfig>
+            <pathToOpenApiDoc>openapi/swagger.json</pathToOpenApiDoc>
             <languages>
               <language>JAVA</language>
               <language>DART</language>
@@ -115,6 +146,7 @@
           </execution>
         </executions>
       </plugin>
+
     </plugins>
   </build>
 

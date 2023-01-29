@@ -3,19 +3,22 @@ package com.github.hervian.swagger.config;
 import com.fasterxml.jackson.core.Versioned;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github.hervian.swagger.generators.docs.RestEndpointCallingOpenApiDocumentGenerator;
 import com.github.hervian.swagger.services.SwaggerDocJaxRsResource;
 import com.github.hervian.swagger.services.SwaggerDocSpringResource;
 import com.github.hervian.swagger.services.SwaggerUiJaxRsResource;
 import com.github.hervian.swagger.services.SwaggerUiSpringResource;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
@@ -32,6 +35,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Data
 public class GenerateDocConfig {
 
@@ -48,6 +54,8 @@ public class GenerateDocConfig {
     return resourcePackages;
   }
 
+  //TODO: make it possible to configure a profile that is used to start up the server and get the swagger.json
+
   public enum AdditionalDoc { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
     NONE,
     HTML,
@@ -57,6 +65,19 @@ public class GenerateDocConfig {
 
   @Parameter(defaultValue = "HTML2")
   private List<AdditionalDoc> additionalDocs;
+
+  /**
+   * Whether the generateDoc mojo should skip the creation of an endpoint that serves the swagger.json.
+   */
+  @Parameter(defaultValue = "false")
+  private boolean skipGenerationOfOpenApiResource;
+
+  /**
+   * By default the generateDoc mojo will detect if the project has an @OpenAPIDefinition annotation.
+   * If missing, one will be created with info from the pom.xml file.
+   */
+  @Parameter(defaultValue = "false")
+  private boolean skipCreateOpenApiDefinition;
 
   public enum RestAnnotationType { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
     SPRING(SwaggerDocSpringResource.class, SwaggerUiSpringResource.class, Arrays.asList(ConditionalOnProperty.class, GetMapping.class, RestController.class, RequestMapping.class, Operation.class, GET.class, Mono.class, MultiValueMap.class, ObjectMapper.class,  Versioned.class, Value.class, EventListener.class, ApplicationReadyEvent.class)),
@@ -74,16 +95,17 @@ public class GenerateDocConfig {
   }
 
   @Parameter(defaultValue = "SPRING")
+  @Builder.Default
   private RestAnnotationType restAnnotationType = RestAnnotationType.SPRING;
 
   @Parameter(defaultValue = "false")
   private boolean skipCheckForBreakingChanges;
 
   /**
-   * Only used for Spring projects which uses Springs annotations (and not Jax-RS annotations). See {@link #restAnnotationType}
-   * TODO: the hardcodet port wont work very well if it is in use by another app. Instead, the {@link com.github.hervian.swagger.generators.docs.SpringWebfluxApiDocumentor} should set a random port and the property below should use it: https://docs.spring.io/spring-boot/docs/2.2.1.RELEASE/maven-plugin/examples/it-random-port.html
+   * Configure the path at which the openapi doc (swagger.json) can be downloadet. Default is "/v3/api-docs" which is the default path set by the springdoc project.
    */
   @Parameter(defaultValue = "/v3/api-docs") //Should match the implementing project's configured path: springdoc.api-docs.path=/v3/api-docs (default)
+  @Builder.Default
   private String apiDocsUrl = "/v3/api-docs";
 
 }

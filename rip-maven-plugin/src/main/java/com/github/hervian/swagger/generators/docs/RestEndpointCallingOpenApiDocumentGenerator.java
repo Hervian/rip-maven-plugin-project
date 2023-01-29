@@ -2,14 +2,11 @@ package com.github.hervian.swagger.generators.docs;
 
 import com.github.hervian.swagger.util.MojoExecutorWrapper;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.descriptor.PluginDescriptor;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
@@ -60,7 +57,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
  *         </configuration>
  *       </plugin>
  */
-public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
+public class RestEndpointCallingOpenApiDocumentGenerator implements OpenApiDocumentGenerator{
 
   /**
    * Uses https://github.com/springdoc/springdoc-openapi to generate a swagger.json doc by
@@ -92,7 +89,7 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
       plugin(
         groupId("org.codehaus.mojo"),
         artifactId("build-helper-maven-plugin"),//https://github.com/openapi-tools/swagger-maven-plugin
-        version("3.3.0")//TODO: get values from PropertiesReader OR from implementing project's maven version?
+        version(input.getPropertiesReader().getBuildHelperMavenPluginVersion())
       ),
       goal("reserve-network-port"),
       configuration(
@@ -108,29 +105,26 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
       ));
   }
 
-  //TODO: get swagger-ui from this approach as well? https://springdoc.org/v2/#general-overview
-  //TODO: add needed springdoc dependencies to classpath: https://stackoverflow.com/a/45710571/6095334
   private void startServer(DocumentGeneratorInput input) throws MojoExecutionException, DependencyResolutionRequiredException {
     input.getLog().info("Starting server with the aim of retrieving the open api doc from configured endpoint.");
-//input.getProject().getTestClasspathElements().forEach(e -> System.out.println(((Dependency)e).getArtifactId()));
-//input.getMavenSession().getPluginContext()
-    //pluginDescriptor.getArtifacts()
     MojoExecutorWrapper.executeMojo(
       plugin(
         groupId("org.springframework.boot"),
         artifactId("spring-boot-maven-plugin"), //https://docs.spring.io/spring-boot/docs/3.0.2/maven-plugin/reference/htmlsingle/#goals-start
-        version("3.0.1")//TODO: get values from PropertiesReader OR from implementing project's spring version?
+        version(input.getPropertiesReader().getSpringBootVersion())//TODO: get values from PropertiesReader OR from implementing project's spring version?
       ),
       goal("start"),
       configuration(
-        element(name("classesDirectory"), input.getProject().getBuild().getOutputDirectory()),
-          element(name("directories"),String.join(",", input.getProject().getTestClasspathElements())),
-          element(name("includes"),
-            element(name("include"), //https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin/src/main/java/org/springframework/boot/maven/Include.java
-              element(name("groupId"),"org.springdoc"),
+          //element(name("profiles"), element(name("profile"), "")),TODO make is possible to configure a build profile in the GenerateDocConfig
+
+        /*element(name("classesDirectory"), input.getProject().getBuild().getOutputDirectory()),
+        element(name("directories"),String.join(",", input.getProject().getTestClasspathElements())),
+        element(name("includes"),
+          element(name("include"), //https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin/src/main/java/org/springframework/boot/maven/Include.java
+          element(name("groupId"),"org.springdoc"),
               element(name("artifactId"),"springdoc-openapi-starter-webflux-api") //TODO: if spring-boot-starter-webflux is on classpath use 'springdoc-openapi-starter-webflux-api' else if 'springdoc-openapi-starter-webmvc-api'. Also: if spring-security is on classpath then add 'springdoc-openapi-starter-common'?
             )
-            ),
+            ),*/
         element(name("arguments"),
           element(name("argument"), "--server.port="+ input.getProject().getProperties().getProperty("tomcat.http.port"))
         )
@@ -144,18 +138,20 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
   }
 
   private void getOpenApiDoc(DocumentGeneratorInput input) throws MojoExecutionException {
-    input.getLog().info("Making localhost call to server to get open api json doc from endpoint using the springdoc-openapi-maven-plugin.");
+    String apiDocsUrl = "http://localhost:" + input.getProject().getProperties().getProperty("tomcat.http.port") + input.getGenerateDocConfig().getApiDocsUrl();
+    input.getLog().info("Making localhost call to server to get open api json doc from the endpoint '"+apiDocsUrl+"' using the springdoc-openapi-maven-plugin.");
+
     MojoExecutorWrapper.executeMojo(
       plugin(
         groupId("org.springdoc"),
         artifactId("springdoc-openapi-maven-plugin"),//https://github.com/openapi-tools/swagger-maven-plugin
-        version("1.4")//TODO: get values from PropertiesReader
+        version(input.getPropertiesReader().getSpringDocOpenApiMavenPluginVersion())//TODO: get values from PropertiesReader
       ),
       goal("generate"),
       configuration(
         element(name("outputFileName"), "swagger.json"),
         element(name("outputDir"), input.getOutputDir()),//"${project.build.directory}/openapi-spec"),
-        element(name("apiDocsUrl"), "http://localhost:" + input.getProject().getProperties().getProperty("tomcat.http.port") + input.getGenerateDocConfig().getApiDocsUrl())//Should match the implementing project's configured path: springdoc.api-docs.path=/v3/api-docs (default)
+        element(name("apiDocsUrl"), apiDocsUrl)//Should match the implementing project's configured path: springdoc.api-docs.path=/v3/api-docs (default)
       ),
       executionEnvironment(
         input.getProject(),
@@ -170,7 +166,7 @@ public class SpringWebfluxApiDocumentor implements OpenApiDocumentGenerator{
       plugin(
         groupId("org.springframework.boot"),
         artifactId("spring-boot-maven-plugin"),//https://github.com/openapi-tools/swagger-maven-plugin
-        version("2.7.0")//TODO: get values from PropertiesReader OR from implementing project's spring version?
+        version(input.getPropertiesReader().getSpringBootVersion())
       ),
       goal("stop"),
       configuration(

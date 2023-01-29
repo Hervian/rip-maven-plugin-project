@@ -1,6 +1,7 @@
 package com.github.hervian.swagger.generators.docs;
 
 import com.github.hervian.swagger.config.GenerateDocConfig;
+import com.github.hervian.swagger.config.PropertiesReader;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.maven.execution.MavenSession;
@@ -16,6 +17,7 @@ public class DocumentGeneratorInput {
   private final MavenSession mavenSession;
   private final BuildPluginManager pluginManager;
   private final Log log;
+  private final PropertiesReader propertiesReader;
 
   private final GenerateDocConfig generateDocConfig;
   private final String outputDir;

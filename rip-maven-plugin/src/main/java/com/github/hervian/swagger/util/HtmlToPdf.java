@@ -19,6 +19,8 @@ import java.nio.file.FileSystems;
 /**
  * Generate XHTML document from html file and css file.
  * Code copy pastet from https://www.netjstech.com/2021/02/html-to-pdf-java-flying-saucer-openpdf.html
+ *
+ * NB This is a work in progress.
  */
 @Builder
 public class HtmlToPdf {
@@ -59,6 +61,8 @@ public class HtmlToPdf {
       // Register additional font
       //renderer.getFontResolver().addFont(getClass().getClassLoader().getResource("fonts/PRISTINA.ttf").toString(), true);
       // Setting base URL to resolve the relative URLs
+
+      //TODO: Edit below. work in progress
       String baseUrl = FileSystems.getDefault()
         .getPath("F:\\", "Anshu\\NetJs\\Programs\\", "src\\main\\resources\\css")
         .toUri()

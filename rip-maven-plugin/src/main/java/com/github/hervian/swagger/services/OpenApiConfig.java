@@ -16,6 +16,11 @@ import io.swagger.v3.oas.annotations.servers.Server;
 @OpenAPIDefinition(
     //servers = @Server(url="http://localhost:8080"), //Before upgrading spring version 'localhost:8080' worked. After port is necessary. Likely, a relative url (which is default) will work. TODO: Is logic in place to set proper port?!
     servers = @Server(url="/"),
-    info = @Info( description = "project.description", title = "project.artifactId", version = "project.version"))
+    info = @Info(
+        description = "project.description " +
+            "<br>" +
+            "Download <a class=\"link\" href=\"/openapi/swagger.html\">swagger.HTML</a>",
+        title = "project.artifactId",
+        version = "project.version"))
 public class OpenApiConfig {
 }

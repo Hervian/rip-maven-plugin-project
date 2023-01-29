@@ -53,4 +53,16 @@ public class PropertiesReader {
   public String getExecMavenPluginVersion() {
     return getProperty("exec.maven.plugin");
   }
+
+  public String getSpringDocOpenApiMavenPluginVersion() {
+    return getProperty("springdoc.openapi.maven.plugin.version");
+  }
+
+  public String getSpringBootVersion() {
+    return getProperty("spring.boot.version");
+  }
+
+  public String getBuildHelperMavenPluginVersion() {
+    return getProperty("build.helper.maven.plugin");
+  }
 }

@@ -77,14 +77,14 @@ public class RestInPeaceMojo  extends AbstractMojo {
   @Parameter
   private GenerateClientConfig generateClientConfig;
 
-  @Parameter
-    private GenerateRestConfig wrapClientsConfig;
+  /*@Parameter
+    private GenerateRestConfig wrapClientsConfig;*/
 
   List<String> listOfGoals;
 
   public enum TaskType {
     genDoc(new GenerateDocTask()),
-    genUi(new GenerateUiTask()),
+    /*genUi(new GenerateUiTask()),*/
     genClient(new GenerateClientTask()),
     ;//wrap(new WrapClientsTask());
 
@@ -97,7 +97,7 @@ public class RestInPeaceMojo  extends AbstractMojo {
   }
 
   @Parameter
-  private List<TaskType> tasks = Lists.newArrayList(TaskType.genDoc, TaskType.genUi, TaskType.genClient);//, TaskType.wrap);
+  private List<TaskType> tasks = Lists.newArrayList(TaskType.genDoc, TaskType.genClient);//, TaskType.wrap);
 
   @SneakyThrows
   @Override
@@ -145,7 +145,7 @@ public class RestInPeaceMojo  extends AbstractMojo {
       .generateDocConfig(generateDocConfig)
       .generateUiConfig(generateUiConfig)
       .generateClientConfig(generateClientConfig)
-      .wrapClientsConfig(wrapClientsConfig)
+      //.wrapClientsConfig(wrapClientsConfig)
       .build();
   }
 

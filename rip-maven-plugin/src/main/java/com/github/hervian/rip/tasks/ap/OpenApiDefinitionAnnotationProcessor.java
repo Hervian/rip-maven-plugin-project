@@ -1,5 +1,6 @@
 package com.github.hervian.rip.tasks.ap;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import org.openapitools.codegen.languages.JavaClientCodegen;
 
 import javax.annotation.Generated;
@@ -19,16 +20,17 @@ import java.util.stream.Collectors;
 /**
  * Should be executed programmatically from a Mojo bound to some pre-compile phase.
  */
-@SupportedAnnotationTypes("javax.annotation.Generated")
+@SupportedAnnotationTypes("io.swagger.v3.oas.annotations.OpenAPIDefinition")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class OpenApiGeneratedAnnotationProcessor extends AbstractProcessor {
+public class OpenApiDefinitionAnnotationProcessor extends AbstractProcessor {
 
   private ProcessingEnvironment processingEnvironment;
   private Elements elementUtils;
+  public static boolean openApiDefinitionAnnotationIsPresentInCompilationUnit = false;
 
   @Override
   public synchronized void init(ProcessingEnvironment processingEnvironment) {
-    System.out.println("OpenApiGeneratedAnnotationProcessor init......");
+    System.out.println("OpenAPIDefinitionAnnotationProcessor init......");
     super.init(processingEnvironment);
     this.processingEnvironment = processingEnvironment;
     this.elementUtils = processingEnvironment.getElementUtils();
@@ -39,15 +41,7 @@ public class OpenApiGeneratedAnnotationProcessor extends AbstractProcessor {
     System.out.println("Entering processor...");
     for (TypeElement annotation : annotations) {
       Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-      for (Element element: annotatedElements){
-        Generated generatedAnno = element.getAnnotation(Generated.class);
-        String[] value = generatedAnno.value();
-        if ( value!=null && value.length>0 && value[0].equalsIgnoreCase(JavaClientCodegen.class.getName())) {
-          PackageElement packageElement = processingEnvironment.getElementUtils().getPackageOf(element);
-          System.out.println(String.format("element simple name: %s, toString: %s, element.asType().toString: %s", element.getSimpleName(), element, element.asType().toString()));
-        }
-      }
-
+      openApiDefinitionAnnotationIsPresentInCompilationUnit = !annotatedElements.isEmpty();
     }
     /*if (roundEnv.processingOver() && !typesToEcco.isEmpty()){
       generateEccoClass(typesToEcco.get(0).getModule().getName());
