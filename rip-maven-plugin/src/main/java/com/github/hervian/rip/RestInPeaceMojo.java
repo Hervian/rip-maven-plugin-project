@@ -74,24 +74,6 @@ public class RestInPeaceMojo extends AbstractMojo {
 
   List<String> listOfGoals;
 
-  /*public enum TaskType {
-    genDoc(new GenerateDocTask()),
-    diff(new DiffTask()),
-    genUi(new GenerateUiTask()),
-    genClient(new GenerateClientTask())
-    ;
-
-    @Getter
-    private Task task;
-
-    private <T extends Task> TaskType(T task){
-      this.task = task;
-    }
-  }
-
-  @Parameter
-  private List<TaskType> tasks = Lists.newArrayList(TaskType.genDoc, TaskType.genClient);//, TaskType.wrap);
-*/
   @SneakyThrows
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {

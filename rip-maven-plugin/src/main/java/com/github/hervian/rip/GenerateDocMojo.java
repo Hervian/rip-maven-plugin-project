@@ -87,23 +87,25 @@ public class GenerateDocMojo extends AbstractMojo {
     getLog().info("Executing GenerateDocMojo (generates swagger.json (using io.openapitools.swagger:swagger-maven-plugin), additional docs as configured and a jax-rs annotated class to server the swagger.json doc etc.)");
     validatePhaseAndGoals();
 
-    if (!generateDocConfig.isSkipCreateOpenApiDefinition()) {
-      List<String> openApiDefinitionAnnotatedClasses = CodeScanner.findOpenAPIDefinitionAnnotations(project);
-      if (openApiDefinitionAnnotatedClasses.isEmpty()) {
-        getLog().info("No OpenAPIDefinition annotations found. An @OpenAPIDefinition annotated class will be generated. The description, version, title etc will be taken from the pom file.");
-        generateOpenApiConfigClass();
-      } else {
-        getLog().info("OpenAPIDefinition(s) found: "+String.join(",", openApiDefinitionAnnotatedClasses)+"\nSkipping generation of OpenAPIDefinition annotated class.");
-      }
-    } else {
-      getLog().info("Skipping generation of OpenAPIDefinition annotated class since the GenerateDocConfig param isSkipCreateOpenApiDefinition is set to true.");
-    }
-    
-    getLog().info("generating swagger.json document");
-    File swaggerFile = generateSwaggerDoc();
-    getLog().info("copying generated swagger.json document to build output folder");
-    copySwaggerDocToBuildOutputDir();
+    generateOpenAPIDefinitionAnnotatedClass();
+    generateOpenapiDocAndCopyToOutputDir();
+    generateAdditionalDocs();
+    generateOpenApiResource();
 
+    //Below seems to fail in current test. May be necessary to add CDATA to generated html before invoking below conversion: https://stackoverflow.com/a/16303854/6095334
+    //HtmlToPdf.builder().project(project).build().execute();
+  }
+
+  private void generateOpenApiResource() throws MojoExecutionException {
+    if (generateDocConfig.isSkipGenerationOfOpenApiResource()) {
+      getLog().info("Skipping creation of swagger doc resource / endpoint as per configuration [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
+    } else {
+      getLog().info("generating SwaggerDocJaxRsResource class (i.e. a class with jax-rs annotated method that serves the swagger.html etc)  [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
+      copySwaggerDocJaxRsResourceToBuildOutputDir();
+    }
+  }
+
+  private void generateAdditionalDocs() throws MojoExecutionException {
     if (generateDocConfig.getAdditionalDocs()!=null && !generateDocConfig.getAdditionalDocs().isEmpty()){
       for (GenerateDocConfig.AdditionalDoc additionalDoc: generateDocConfig.getAdditionalDocs()){
         if (GenerateDocConfig.AdditionalDoc.NONE!=additionalDoc){
@@ -115,16 +117,27 @@ public class GenerateDocMojo extends AbstractMojo {
         }
       }
     }
+  }
 
-    if (generateDocConfig.isSkipGenerationOfOpenApiResource()) {
-      getLog().info("Skipping creation of swagger doc resource / endpoint as per configuration [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
+  private void generateOpenapiDocAndCopyToOutputDir() throws MojoExecutionException {
+    getLog().info("generating swagger.json document");
+    File swaggerFile = generateSwaggerDoc();
+    getLog().info("copying generated swagger.json document to build output folder");
+    copySwaggerDocToBuildOutputDir();
+  }
+
+  private void generateOpenAPIDefinitionAnnotatedClass() throws MojoExecutionException {
+    if (!generateDocConfig.isSkipCreateOpenApiDefinition()) {
+      List<String> openApiDefinitionAnnotatedClasses = CodeScanner.findOpenAPIDefinitionAnnotations(project);
+      if (openApiDefinitionAnnotatedClasses.isEmpty()) {
+        getLog().info("No OpenAPIDefinition annotations found. An @OpenAPIDefinition annotated class will be generated. The description, version, title etc will be taken from the pom file.");
+        generateOpenApiConfigClass();
+      } else {
+        getLog().info("OpenAPIDefinition(s) found: "+String.join(",", openApiDefinitionAnnotatedClasses)+"\nSkipping generation of OpenAPIDefinition annotated class.");
+      }
     } else {
-      getLog().info("generating SwaggerDocJaxRsResource class (i.e. a class with jax-rs annotated method that serves the swagger.html etc)  [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
-      copySwaggerDocJaxRsResourceToBuildOutputDir();
+      getLog().info("Skipping generation of OpenAPIDefinition annotated class since the GenerateDocConfig param isSkipCreateOpenApiDefinition is set to true.");
     }
-
-    //Below seems to fail in current test. May be necessary to add CDATA to generated html before invoking below conversion: https://stackoverflow.com/a/16303854/6095334
-    //HtmlToPdf.builder().project(project).build().execute();
   }
 
   @Deprecated
