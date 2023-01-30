@@ -88,12 +88,13 @@ public class ClassFileCopier {
     /*sourceCode = addAnnotations(sourceCode, restAnnotationType);*/
     String newPackage = resourcePackages.get(0);
     getLog().info(String.format("Editing class %s by setting package to: %s", restResource.getName(), newPackage));
-    return sourceCode = editPackage(sourceCode, newPackage);
+    return editPackage(sourceCode, restResource.getPackage().getName(), newPackage);
   }
 
-  private String editPackage(String sourceCode, String newPackage) {
-    String oldPackage = SwaggerDocJaxRsResource.class.getPackage().getName();
-    return sourceCode.replace(oldPackage, newPackage);
+  private String editPackage(String sourceCode, String oldPackage, String newPackage) {
+    String sourceCodeWithCorrectedPackage = sourceCode.replace(oldPackage, newPackage);
+    System.out.println(sourceCodeWithCorrectedPackage);
+    return sourceCodeWithCorrectedPackage;
   }
 
  /* //TODO: I am not sure this method works  - is it the classpath of the plugin we are using or that of the project using the plugin? (We want the latter). In other words: Likely this plugin pt only works for Spring projects

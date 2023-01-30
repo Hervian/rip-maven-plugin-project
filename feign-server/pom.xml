@@ -102,8 +102,10 @@
               <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
             </additionalDocs>
             <restAnnotationType>SPRING_JAX_RS</restAnnotationType>
-            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
           </generateDocConfig>
+          <diffConfig>
+            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
+          </diffConfig>
           <!--<generateUiConfig>
             <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
           </generateUiConfig>-->

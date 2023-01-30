@@ -1,17 +1,18 @@
 package com.github.hervian.rip;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.hervian.rip.tasks.GenerateClientTask;
-import com.github.hervian.rip.tasks.GenerateDocTask;
-import com.github.hervian.rip.tasks.Task;
+import com.github.hervian.rip.config.DiffConfig;
 import com.github.hervian.rip.config.GenerateClientConfig;
 import com.github.hervian.rip.config.GenerateDocConfig;
 import com.github.hervian.rip.config.GenerateUiConfig;
 import com.github.hervian.rip.config.PropertiesReader;
+import com.github.hervian.rip.util.mappers.DiffMojoMapper;
+import com.github.hervian.rip.util.mappers.GenerateClientMojoMapper;
+import com.github.hervian.rip.util.mappers.GenerateDocMojoMapper;
+import com.github.hervian.rip.util.mappers.GenerateUiMojoMapper;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.Singular;
 import lombok.SneakyThrows;
 import org.apache.maven.execution.MavenSession;
@@ -33,11 +34,12 @@ import java.util.List;
  * One Mojo to rule them all.
  * This mojo calls all the other (except the GenerateRestMojo which runs before the compile phase...)
  */
+@Data
 @Mojo(name = "rip",
   requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
   defaultPhase = LifecyclePhase.PREPARE_PACKAGE,
   threadSafe = true)
-public class RestInPeaceMojo  extends AbstractMojo {
+public class RestInPeaceMojo extends AbstractMojo {
 
   private PropertiesReader propertiesReader;
 
@@ -58,18 +60,6 @@ public class RestInPeaceMojo  extends AbstractMojo {
   @Component
   private BuildPluginManager pluginManager;
 
-    /*@Parameter(required = true)
-    private List<String> resourcePackages;
-
-    public enum AdditionalDoc { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
-        NONE,
-        HTML,
-        HTML2,
-        CWIKI //Confluence wiki docs
-    }
-    @Parameter(defaultValue = "HTML2")
-    private List<AdditionalDoc> additionalDocs;*/
-
   @Parameter
   private GenerateDocConfig generateDocConfig;
 
@@ -79,16 +69,17 @@ public class RestInPeaceMojo  extends AbstractMojo {
   @Parameter
   private GenerateClientConfig generateClientConfig;
 
-  /*@Parameter
-    private GenerateRestConfig wrapClientsConfig;*/
+  @Parameter
+  private DiffConfig diffConfig;
 
   List<String> listOfGoals;
 
-  public enum TaskType {
+  /*public enum TaskType {
     genDoc(new GenerateDocTask()),
-    /*genUi(new GenerateUiTask()),*/
-    genClient(new GenerateClientTask()),
-    ;//wrap(new WrapClientsTask());
+    diff(new DiffTask()),
+    genUi(new GenerateUiTask()),
+    genClient(new GenerateClientTask())
+    ;
 
     @Getter
     private Task task;
@@ -100,11 +91,29 @@ public class RestInPeaceMojo  extends AbstractMojo {
 
   @Parameter
   private List<TaskType> tasks = Lists.newArrayList(TaskType.genDoc, TaskType.genClient);//, TaskType.wrap);
-
+*/
   @SneakyThrows
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     long mojoStartTime = System.currentTimeMillis();
+    MojoExecutionSummary.MojoExecutionSummaryBuilder mojoExecutionSummaryBuilder = MojoExecutionSummary.builder();
+
+    List<AbstractMojo> mojos = Lists.newArrayList(
+        GenerateDocMojoMapper.INSTANCE.map(this),
+        DiffMojoMapper.INSTANCE.map(this),
+        GenerateUiMojoMapper.INSTANCE.map(this),
+        GenerateClientMojoMapper.INSTANCE.map(this)
+    );
+
+    for (AbstractMojo mojo: mojos) {
+      TaskExecutionSummary mojoTaskExecutionSummary = executeMojo(mojo);
+      mojoExecutionSummaryBuilder.taskExecutionSummary(mojoTaskExecutionSummary);
+    }
+
+    long mojoEndTime = System.currentTimeMillis();
+    mojoExecutionSummaryBuilder.mojoDuration((mojoEndTime-mojoStartTime)/1000);
+    System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(mojoExecutionSummaryBuilder.build()));
+    /*long mojoStartTime = System.currentTimeMillis();
     String tasksString = System.getProperty("tasks");
     System.out.println("System.getProperty(\"tasks\")="+tasksString);
     String[] tasksArray = tasksString==null ? null : tasksString.split(",");
@@ -131,10 +140,44 @@ public class RestInPeaceMojo  extends AbstractMojo {
     }
     long mojoEndTime = System.currentTimeMillis();
     mojoExecutionSummaryBuilder.mojoDuration((mojoEndTime-mojoStartTime)/1000);
-    System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(mojoExecutionSummaryBuilder.build()));
+    System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(mojoExecutionSummaryBuilder.build()));*/
   }
 
-  private Task.TaskInput buildTaskInput() {
+  /*private void executeMojos() throws JsonProcessingException, MojoExecutionException, MojoFailureException {
+    long mojoStartTime = System.currentTimeMillis();
+    MojoExecutionSummary.MojoExecutionSummaryBuilder mojoExecutionSummaryBuilder = MojoExecutionSummary.builder();
+
+    List<AbstractMojo> mojos = Lists.newArrayList(
+        GenerateDocMojoMapper.INSTANCE.map(this),
+        DiffMojoMapper.INSTANCE.map(this),
+        GenerateUiMojoMapper.INSTANCE.map(this),
+        GenerateClientMojoMapper.INSTANCE.map(this)
+    );
+
+    for (AbstractMojo mojo: mojos) {
+      TaskExecutionSummary mojoTaskExecutionSummary = executeMojo(mojo);
+      mojoExecutionSummaryBuilder.taskExecutionSummary(mojoTaskExecutionSummary);
+    }
+
+    long mojoEndTime = System.currentTimeMillis();
+    mojoExecutionSummaryBuilder.mojoDuration((mojoEndTime-mojoStartTime)/1000);
+    System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(mojoExecutionSummaryBuilder.build()));
+  }*/
+
+  private TaskExecutionSummary executeMojo(AbstractMojo mojo) throws MojoExecutionException, MojoFailureException {
+    long startTime = System.currentTimeMillis();
+    getLog().info("\n\t<<< rip-maven-plugin: " + mojo.getClass().getSimpleName() + " mojo >>>");
+    mojo.execute();
+    long endTime = System.currentTimeMillis();
+    return
+        TaskExecutionSummary
+            .builder()
+            .taskDuration((endTime-startTime)/1000)
+            .taskName(mojo.getClass().getSimpleName())
+            .build();
+  }
+
+  /*private Task.TaskInput buildTaskInput() {
     LifecyclePhase lifecyclePhase = getLifecyclePhase();
     return Task.TaskInput
       .builder()
@@ -147,11 +190,11 @@ public class RestInPeaceMojo  extends AbstractMojo {
       .generateDocConfig(generateDocConfig)
       .generateUiConfig(generateUiConfig)
       .generateClientConfig(generateClientConfig)
-      //.wrapClientsConfig(wrapClientsConfig)
+      .diffConfig(diffConfig)
       .build();
-  }
+  }*/
 
-  private LifecyclePhase getLifecyclePhase() {
+  /*private LifecyclePhase getLifecyclePhase() {
     for (String goal: mavenSession.getGoals()){
       try {
         return LifecyclePhase.valueOf(goal.toUpperCase());
@@ -166,7 +209,7 @@ public class RestInPeaceMojo  extends AbstractMojo {
   private List<TaskType> validateTasks(String[] tasks) throws MojoExecutionException {
     //TODO;
     return null;
-  }
+  }*/
 
   @Builder
   @Data

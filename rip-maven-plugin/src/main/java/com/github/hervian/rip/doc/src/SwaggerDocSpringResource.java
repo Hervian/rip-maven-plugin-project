@@ -6,6 +6,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +16,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/openapi")
@@ -31,15 +35,26 @@ public class SwaggerDocSpringResource {
   /*@Context //What is the equivalent of @Context UriInfo in Spring Rest: https://stackoverflow.com/q/34690109/6095334
   UriInfo uriInfo;*/
 
-      @Operation(hidden = true)
+/*  @Operation(hidden = true)
   @GetMapping(value = "/swagger/swagger.json", produces = MediaType.APPLICATION_JSON_VALUE)
   public InputStream getSwaggerJson(){ //TODO fix: error 500 No Encoder for [java.io.InputStream] with preset Content-Type 'null'
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     InputStream resource = classloader.getResourceAsStream("${swagger.json.path}");
     System.out.println("swagger.json resource!=null: "+Boolean.valueOf(resource!=null));
     return resource;
-  }
+  }*/
 
+  @Operation(hidden = true)
+  //@ResponseBody
+  @GetMapping(value = "/swagger.json", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<byte[]> getSwaggerJson() throws IOException {
+    ClassLoader var1 = Thread.currentThread().getContextClassLoader();
+    try (InputStream var2 = var1.getResourceAsStream("${swagger.json.path}")){
+      String swaggerJson = StreamUtils.copyToString(var2, Charset.forName("UTF-8"));
+      swaggerJson = swaggerJson.replace("localhost:8080", "localhost:"+serverPort);
+      return ResponseEntity.ok().body(swaggerJson.getBytes(StandardCharsets.UTF_8));
+    }
+  }
 
   @Operation(hidden = true)
   @GetMapping(value = "/swagger.html", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

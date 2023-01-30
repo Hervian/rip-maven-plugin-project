@@ -1,6 +1,5 @@
 package com.github.hervian.rip;
 
-import com.github.hervian.rip.util.compilation.ClassFileCopier;
 import com.github.hervian.rip.config.GenerateClientConfig;
 import com.github.hervian.rip.config.GenerateDocConfig;
 import com.github.hervian.rip.config.PropertiesReader;
@@ -11,6 +10,7 @@ import com.github.hervian.rip.doc.RestEndpointCallingOpenApiDocumentGenerator;
 import com.github.hervian.rip.doc.src.OpenApiConfig;
 import com.github.hervian.rip.util.CodeScanner;
 import com.github.hervian.rip.util.MojoExecutorWrapper;
+import com.github.hervian.rip.util.compilation.ClassFileCopier;
 import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -104,12 +104,6 @@ public class GenerateDocMojo extends AbstractMojo {
     getLog().info("copying generated swagger.json document to build output folder");
     copySwaggerDocToBuildOutputDir();
 
-    if (!generateDocConfig.isSkipCheckForBreakingChanges()){
-      String packaging = project.getPackaging();
-      System.out.println("packaging: "+ packaging);
-      failBuildOnUnflaggedBreakingChanges();
-    }
-
     if (generateDocConfig.getAdditionalDocs()!=null && !generateDocConfig.getAdditionalDocs().isEmpty()){
       for (GenerateDocConfig.AdditionalDoc additionalDoc: generateDocConfig.getAdditionalDocs()){
         if (GenerateDocConfig.AdditionalDoc.NONE!=additionalDoc){
@@ -126,7 +120,7 @@ public class GenerateDocMojo extends AbstractMojo {
       getLog().info("Skipping creation of swagger doc resource / endpoint as per configuration [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
     } else {
       getLog().info("generating SwaggerDocJaxRsResource class (i.e. a class with jax-rs annotated method that serves the swagger.html etc)  [generateDocConfig.isSkipGenerationOfOpenApiResource()="+generateDocConfig.isSkipGenerationOfOpenApiResource()+"]");
-      copySwaggerDocJaxRsResourceToBuildOutputDir(); //duration: ca 1 second
+      copySwaggerDocJaxRsResourceToBuildOutputDir();
     }
 
     //Below seems to fail in current test. May be necessary to add CDATA to generated html before invoking below conversion: https://stackoverflow.com/a/16303854/6095334
@@ -292,87 +286,6 @@ public class GenerateDocMojo extends AbstractMojo {
     sourceCodeWithCorrectedPackage = sourceCodeWithCorrectedPackage.replace("${apiDocsUrl}", generateDocConfig.getApiDocsUrl());
     sourceCodeWithCorrectedPackage = sourceCodeWithCorrectedPackage.replace("${swagger.json.path}", GenerateDocMojo.swagerJsonFilePath);
     classFileCopier.copyResourceToBuildOutputDir(restType.getSimpleName(), sourceCodeWithCorrectedPackage, generateDocConfig.getRestAnnotationType().getRestAnnotationTypes());
-  }
-
-  /**
-   * See if below changes (major version stuff) can be solved by plugin devs - https://github.com/redskap/swagger-brake-maven-plugin/issues/23
-   * Call swagger-brake-maven-plugin to check for breaking changes (if skipCheckForBreakingChanges=false)
-   * Break the build if all of the following is true:
-   * <ol>
-   *   <li>The flag skipCheckForBreakingChanges is false (default is false)</li>
-   *   <li>The swagger-brake-maven-plugin reports a breaking change</li>
-   *   <li>The pom version have not had its major version increased</li>
-   * </ol>
-   *
-   * Sources: https://arnoldgalovics.com/introducing-swagger-brake/
-   *
-   * @throws MojoExecutionException
-   */
-  private void failBuildOnUnflaggedBreakingChanges() throws MojoExecutionException {
-    /*AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-    ctx.scan("com.zetcode");
-    ctx.refresh();
-
-    var bean = ctx.getBean(Application.class);
-    bean.run();
-
-    ctx.close();
-    LatestArtifactVersionResolver latestArtifactVersionResolver =
-    String getPreviousVersion = latestArtifactVersionResolver.resolve(options);*/
-    getLog().info("Calling swagger-brake-maven-plugin to check if there are breaking API changes that have not been reflected in the pom's version (semantic versioning).");
-    String releaseRepository = null, snapshotRepository = null;
-    for (org.apache.maven.model.Repository repository: (List<org.apache.maven.model.Repository>)project.getRepositories()){
-      System.out.println("repository:" + repository);
-      if (repository.getReleases()!=null && repository.getReleases().isEnabled()){
-        System.out.println(repository.getUrl());
-        releaseRepository = repository.getUrl();
-      }
-      if (repository.getSnapshots()!=null && repository.getSnapshots().isEnabled()){
-        System.out.println(repository.getUrl());
-        snapshotRepository = repository.getUrl();
-      }
-    }
-    System.out.println("Using packaging: " + project.getPackaging());
-    MojoExecutorWrapper.executeMojo(
-      plugin(
-        groupId("io.redskap"),
-        artifactId("swagger-brake-maven-plugin"),
-        version(propertiesReader.getSwaggerBrakeVersion())
-      ),
-      goal("check"),
-      configuration(
-        element(name("newApi"), project.getBuild().getOutputDirectory()+"/swagger/swagger.json"),
-        element(name("mavenRepoUrl"), getReleasesRepo(project)),//releaseRepository),
-        element(name("mavenSnapshotRepoUrl"), getSnapshotRepo(project))//snapshotRepository)
-      ),
-      executionEnvironment(
-        project,
-        mavenSession,
-        pluginManager
-      )
-    );
-  }
-
-  public static String getReleasesRepo(MavenProject project){
-    String releaseRepository = null;
-    for (org.apache.maven.model.Repository repository: (List<org.apache.maven.model.Repository>)project.getRepositories()){
-      if (repository.getReleases()!=null && repository.getReleases().isEnabled()){
-        System.out.println(repository.getUrl());
-        releaseRepository = repository.getUrl();
-      }
-    }
-    return releaseRepository;
-  }
-
-  public static String getSnapshotRepo(MavenProject project){
-    String snapshotRepository = null;
-    for (org.apache.maven.model.Repository repository: (List<org.apache.maven.model.Repository>)project.getRepositories()){
-      if (repository.getSnapshots()!=null && repository.getSnapshots().isEnabled()){
-        System.out.println(repository.getUrl());
-        snapshotRepository = repository.getUrl();
-      }
-    }
-    return snapshotRepository;
   }
 
 

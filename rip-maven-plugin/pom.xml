@@ -52,17 +52,20 @@
 	</distributionManagement>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<artifactId>${project.artifactId}</artifactId>
+		<build.helper.maven.plugin>3.3.0</build.helper.maven.plugin>
+		<groupId>${project.groupId}</groupId>
+		<exec.maven.plugin>3.1.0</exec.maven.plugin>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<groupId>${project.groupId}</groupId>
-		<artifactId>${project.artifactId}</artifactId>
-    <org.openapitools.version>6.2.1</org.openapitools.version>
-    <swagger-brake.version>2.4.0-SNAPSHOT</swagger-brake.version>
-		<exec.maven.plugin>3.1.0</exec.maven.plugin>
+		<org.projectlombok.version>1.18.24</org.projectlombok.version>
+		<org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
+		<org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
+		<org.openapitools.version>6.2.1</org.openapitools.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<springdoc.openapi.maven.plugin.version>1.4</springdoc.openapi.maven.plugin.version>
 		<spring.boot.version>3.0.1</spring.boot.version>
-		<build.helper.maven.plugin>3.3.0</build.helper.maven.plugin>
+		<swagger-brake.version>2.4.0-SNAPSHOT</swagger-brake.version>
 	</properties>
 
 	<dependencies>
@@ -70,6 +73,12 @@
 			<groupId>org.codehaus.mojo</groupId>
 			<artifactId>exec-maven-plugin</artifactId>
 			<version>${exec.maven.plugin}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${org.mapstruct.version}</version>
 		</dependency>
 
 		<dependency>
@@ -203,7 +212,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.24</version>
+			<version>${org.projectlombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -363,6 +372,30 @@
               <configuration>
                  <source>${maven.compiler.source}</source>
                  <target>${maven.compiler.target}</target>
+								<annotationProcessorPaths>
+									<path>
+										<groupId>org.projectlombok</groupId>
+										<artifactId>lombok</artifactId>
+										<version>${org.projectlombok.version}</version>
+									</path>
+									<!-- This is needed when using Lombok 1.18.16 and above -->
+									<path>
+										<groupId>org.projectlombok</groupId>
+										<artifactId>lombok-mapstruct-binding</artifactId>
+										<version>0.2.0</version>
+									</path>
+									<!-- Mapstruct should follow the lombok path(s) -->
+									<path>
+										<groupId>org.mapstruct</groupId>
+										<artifactId>mapstruct-processor</artifactId>
+										<version>${org.mapstruct.version}</version>
+									</path>
+								</annotationProcessorPaths>
+								<compilerArgs>
+									<compilerArg>
+										-Amapstruct.unmappedTargetPolicy=IGNORE
+									</compilerArg>
+								</compilerArgs>
                </configuration>
      <!--   <version>3.10.1</version>
         <configuration>

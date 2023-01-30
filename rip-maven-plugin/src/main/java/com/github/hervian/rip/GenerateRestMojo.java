@@ -4,7 +4,7 @@ import com.github.hervian.rip.rest_client.Feign;
 import com.github.hervian.rip.rest_client.NativeClient;
 import com.github.hervian.rip.rest_client.RestClient;
 import com.github.hervian.rip.rest_client.Webclient;
-import com.github.hervian.rip.tasks.config.GenerateRestConfig;
+import com.github.hervian.rip.config.GenerateRestConfig;
 import com.github.hervian.rip.config.GenerateDocConfig;
 import com.github.hervian.rip.config.PropertiesReader;
 import com.google.common.io.Files;

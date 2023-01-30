@@ -104,9 +104,6 @@ public class GenerateDocConfig {
   @Builder.Default
   private RestAnnotationType restAnnotationType = RestAnnotationType.SPRING;
 
-  @Parameter(defaultValue = "false")
-  private boolean skipCheckForBreakingChanges;
-
   /**
    * Configure the path at which the openapi doc (swagger.json) can be downloadet. Default is "/v3/api-docs" which is the default path set by the springdoc project.
    */

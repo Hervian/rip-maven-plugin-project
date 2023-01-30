@@ -221,14 +221,9 @@ public class GenerateUiMojo extends AbstractMojo {
       content = content.replaceAll("src=\"./", "src=\"./swagger/ui/");
       org.apache.commons.io.FileUtils.writeStringToFile(dest2, content, "UTF-8");
     } catch (IOException e) {
-      //Simple exception handling, replace with what's necessary for your use case!
       getLog().error(e);
       throw new RuntimeException("Generating file failed", e);
     }
-
-    /*String content = IOUtils.toString(new FileInputStream(myfile), myencoding);
-    content = content.replaceAll(myPattern, myReplacement);
-    IOUtils.write(content, new FileOutputStream(myfile), myencoding);*/
   }
 
   private void copySwaggerUiJaxRsResourceToBuildOutputDir() throws MojoExecutionException {

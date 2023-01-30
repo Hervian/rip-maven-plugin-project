@@ -300,10 +300,12 @@
         <configuration>
           <generateDocConfig>
             <additionalDocs>
-              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+              <additionalDoc>HTML2</additionalDoc>
             </additionalDocs>
-            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
           </generateDocConfig>
+          <diffConfig>
+            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
+          </diffConfig>
           <generateClientConfig>
             <languages>
               <language>JAVA</language>

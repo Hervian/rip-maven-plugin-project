@@ -1,4 +1,4 @@
-package com.github.hervian.rip.tasks.config;
+package com.github.hervian.rip.config;
 
 import com.google.common.collect.Lists;
 import lombok.Data;

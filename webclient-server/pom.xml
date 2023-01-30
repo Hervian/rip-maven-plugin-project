@@ -96,7 +96,6 @@
               <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
             </additionalDocs>
             <!--<restAnnotationType>SPRING</restAnnotationType>-->
-            <skipCheckForBreakingChanges>true</skipCheckForBreakingChanges>
           </generateDocConfig>
           <!--<generateUiConfig>
             <fileCustomizer>dk.tdc.chub.config.SwaggerUiCustomizer</fileCustomizer>
@@ -116,10 +115,11 @@
               <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
               <!--
                 In this project we are testing that the plugin supports the use case where the project does not want the
-                plugin to handle generation if swagger.json and swagger-ui.
+                plugin to handle generation if swagger.json.
                 Instead, the user generates those via standard springdoc dependencies and uses the rip-maven-plugin to
-                generate the client.
+                generate the swagger-ui and a client.
               -->
+              <goal>generateUi</goal>
               <goal>generateClient</goal>
             </goals>
           </execution>

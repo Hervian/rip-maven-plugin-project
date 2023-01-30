@@ -9,8 +9,6 @@ import com.github.hervian.rip.client.publishers.ClientPublisher;
 import com.github.hervian.rip.config.GenerateClientConfig;
 import com.github.hervian.rip.config.GenerateDocConfig;
 import com.github.hervian.rip.config.PropertiesReader;
-import com.github.hervian.rip.tasks.GenerateDocTask;
-import com.github.hervian.rip.tasks.Task;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.openapitools.swagger.OutputFormat;
@@ -178,8 +176,8 @@ public class GenerateClientMojo extends AbstractMojo {
     //Alternative: TemporaryJarFileDownloader from swagger-brake-root project or Maven2LatestArtifactDownloader
     ArtifactDownloaderHandler artifactDownloaderHandler = applicationContext.getBean(ArtifactDownloaderHandler.class);
     Options options = new Options();
-    options.setMavenRepoUrl(GenerateDocMojo.getReleasesRepo(project));
-    options.setMavenSnapshotRepoUrl(GenerateDocMojo.getSnapshotRepo(project));
+    options.setMavenRepoUrl(DiffMojo.getReleasesRepo(project));
+    options.setMavenSnapshotRepoUrl(DiffMojo.getSnapshotRepo(project));
     options.setGroupId(project.getGroupId());
     options.setArtifactId(project.getArtifactId());
     options.setCurrentArtifactVersion(project.getVersion());
@@ -187,7 +185,7 @@ public class GenerateClientMojo extends AbstractMojo {
     options.setArtifactPackaging(ArtifactPackaging.forPackaging(project.getPackaging()));
 
     try {
-      getLog().info(String.format("Downloading old api from binary repos %s and %s", GenerateDocMojo.getReleasesRepo(project), GenerateDocMojo.getSnapshotRepo(project)));
+      getLog().info(String.format("Downloading old api from binary repos %s and %s", DiffMojo.getReleasesRepo(project), DiffMojo.getSnapshotRepo(project)));
       artifactDownloaderHandler.handle(options);
     } catch (LatestArtifactDownloadException e){
       if (e.getCause() instanceof RuntimeException && e.getCause().getMessage().contains("Cannot get metadata")){
@@ -274,7 +272,7 @@ public class GenerateClientMojo extends AbstractMojo {
 
   /**
    * If the generateDocMojo has run that mojo will have created a swagger.file at GenerateDocMojo.openApiDocPath + GenerateDocMojo.openApiDocFileName
-   * If the generateDocMojo has been configured to not run then the scenario is that the plugin user have themselves generated this file and made it avaiable at some configured path.
+   * If the generateDocMojo has been configured to not run then the scenario is that the plugin user have themselves generated this file and made it available at some configured path.
    * @return
    */
   private String getPathToSwaggerDoc(boolean callGenerateDocMojoIfOpenApiDocIsNotFound) throws MojoExecutionException {
@@ -284,12 +282,11 @@ public class GenerateClientMojo extends AbstractMojo {
     }
 
     File fileInGeneratedSourcesFolder = new File(project.getBuild().getDirectory() + path);
-    getLog().info("file: " + fileInGeneratedSourcesFolder.getAbsolutePath() + (fileInGeneratedSourcesFolder.exists() ? " exists" : " does not exist."));
     if (fileInGeneratedSourcesFolder.exists()) {
       return fileInGeneratedSourcesFolder.getAbsolutePath();
     }
     File fileInClassesDir = new File(project.getBuild().getOutputDirectory() + path);
-    getLog().info("file: " + fileInClassesDir.getAbsolutePath() + (fileInClassesDir.exists() ? " exists" : " does not exist."));
+
     if (fileInClassesDir.exists()) {
       return fileInClassesDir.getAbsolutePath();
     }
@@ -304,26 +301,21 @@ public class GenerateClientMojo extends AbstractMojo {
        * This would cause the logic to start up the server and download the json.
        * Let us call the generateDoc mojo to achieve the same:
        */
-      Task.TaskInput taskInput =
-          Task.TaskInput
-              .builder()
-              .propertiesReader(propertiesReader)
-              .project(project)
-              .log(getLog())
-              .mavenSession(mavenSession)
-              .pluginManager(pluginManager)
-              .generateDocConfig(
-                  GenerateDocConfig
-                      .builder()
-                      .additionalDocs(Lists.newArrayList(GenerateDocConfig.AdditionalDoc.NONE))
-                      .restAnnotationType(GenerateDocConfig.RestAnnotationType.SPRING) //That is: make the generateDoc mojo download the swagger.json
-                      .skipCheckForBreakingChanges(true)
-                      .skipGenerationOfOpenApiResource(true)
-                      .skipCreateOpenApiDefinition(true)
-                      .build())
-              .build();
-      System.out.println("taskInput.getGenerateDocConfig().getApiDocsUrl()=" + taskInput.getGenerateDocConfig().getApiDocsUrl());
-      new GenerateDocTask().execute(taskInput);
+      GenerateDocMojo generateDocMojo = new GenerateDocMojo();
+      generateDocMojo.setGenerateDocConfig(GenerateDocConfig
+          .builder()
+          .additionalDocs(Lists.newArrayList(GenerateDocConfig.AdditionalDoc.NONE))
+          .restAnnotationType(GenerateDocConfig.RestAnnotationType.SPRING) //That is: make the generateDoc mojo download the swagger.json
+          .skipGenerationOfOpenApiResource(true)
+          .skipCreateOpenApiDefinition(true)
+          .build());
+      generateDocMojo.setProject(project);
+      generateDocMojo.setMavenSession(mavenSession);
+      generateDocMojo.setPluginManager(pluginManager);
+      generateDocMojo.setPropertiesReader(propertiesReader);
+      generateDocMojo.setLog(getLog());
+
+      generateDocMojo.execute();
       return getPathToSwaggerDoc(false);
     }
     throw new MojoExecutionException("Unable to find the swagger.json dir. Was neither at:\n" +
