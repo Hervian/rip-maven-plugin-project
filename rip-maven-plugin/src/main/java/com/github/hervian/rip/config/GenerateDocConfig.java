@@ -109,6 +109,6 @@ public class GenerateDocConfig {
    */
   @Parameter(defaultValue = "/v3/api-docs") //Should match the implementing project's configured path: springdoc.api-docs.path=/v3/api-docs (default)
   @Builder.Default
-  private String apiDocsUrl = "/v3/api-docs";
+  private String apiDocsUrl = "/v3/api-docs"; //TODO: rename to pathToOpenApiDoc since this is not a url
 
 }

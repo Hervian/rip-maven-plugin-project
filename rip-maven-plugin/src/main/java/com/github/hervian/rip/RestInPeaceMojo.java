@@ -61,16 +61,16 @@ public class RestInPeaceMojo extends AbstractMojo {
   private BuildPluginManager pluginManager;
 
   @Parameter
-  private GenerateDocConfig generateDocConfig;
+  private GenerateDocConfig generateDocConfig = new GenerateDocConfig();
 
   @Parameter
-  private GenerateUiConfig generateUiConfig;
+  private GenerateUiConfig generateUiConfig = new GenerateUiConfig();
 
   @Parameter
-  private GenerateClientConfig generateClientConfig;
+  private GenerateClientConfig generateClientConfig = new GenerateClientConfig();
 
   @Parameter
-  private DiffConfig diffConfig;
+  private DiffConfig diffConfig = new DiffConfig();
 
   List<String> listOfGoals;
 

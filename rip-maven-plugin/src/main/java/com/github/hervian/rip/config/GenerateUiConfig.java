@@ -1,5 +1,6 @@
 package com.github.hervian.rip.config;
 
+import lombok.Builder;
 import lombok.Data;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -17,6 +18,14 @@ public class GenerateUiConfig {
    */
   @Parameter()
   private String fileCustomizer;
+
+  /**
+   * Only set this parameter if you are not using the generateDocMojo.
+   * The generateDocMojo will generate or download  the json doc and make it available at a specific path.
+   * If you are using springdoc to generate the openapi docs it will by standard be available at /v3/api-docs
+   */
+  @Parameter(defaultValue = "/v3/api-docs")
+  private String pathToOpenApiDoc = "/v3/api-docs";
 
   /*@Parameter
   private boolean skipGenerateUi*/

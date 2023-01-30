@@ -50,8 +50,9 @@ public class GenerateClientConfig {
   }
 
   /**
-   * Only set this parameter if you are not using the generateDocMojo. The generateDocMojo will generate or download  the json doc and make it available at a specific path.
-   * But if you have made it available on a nother opath
+   * Only set this parameter if you are not using the generateDocMojo.
+   * The generateDocMojo will generate or download  the json doc and make it available at a specific path.
+   * If you are using springdoc to generate the openapi docs it will by standard be available at /v3/api-docs
    */
   @Parameter
   private String pathToOpenApiDoc;
