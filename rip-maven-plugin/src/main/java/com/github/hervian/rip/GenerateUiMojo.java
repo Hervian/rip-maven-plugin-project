@@ -1,5 +1,6 @@
 package com.github.hervian.rip;
 
+import com.github.hervian.rip.util.RipMavenPluginGoal;
 import com.github.hervian.rip.util.compilation.ClassFileCopier;
 import com.github.hervian.rip.config.GenerateDocConfig;
 import com.github.hervian.rip.config.GenerateUiConfig;
@@ -215,15 +216,37 @@ public class GenerateUiMojo extends AbstractMojo {
        * Else, in those cases where the plugin user has created their own doc and endpoint (fx using springfox, springdox or some plugin) then the path must be configured and used here.
        *
        */
-      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/openapi/\")) + '"+generateUiConfig.getPathToOpenApiDoc()+"'");
+      content = content.replaceAll("\"https://petstore.swagger.io/v2/swagger.json\"", "window.location.href.substring(0, window.location.href.lastIndexOf(\"/openapi/\")) + '"+ getPathToOpenApiDoc() +"'");
       // content = content.replaceAll("\"./swagger-ui", "\"./swagger/ui/swagger-ui");
       content = content.replaceAll("href=\"./", "href=\"./swagger/ui/");
       content = content.replaceAll("src=\"./", "src=\"./swagger/ui/");
       org.apache.commons.io.FileUtils.writeStringToFile(dest2, content, "UTF-8");
-    } catch (IOException e) {
+    } catch (IOException | MojoExecutionException e) {
       getLog().error(e);
       throw new RuntimeException("Generating file failed", e);
     }
+  }
+
+  /**
+   * The path will depend on the following:
+   *
+   * if generateDocMojo goal or rip goal is activated then the doc will be available at
+   * the endpoints defined in SwaggerDocJaxRsResource, SwaggerDocSpringResource respectively.
+   * Which classes is added to the classpath/copy-pasted depends on whether the server at hand
+   * is using spring mvc/webflux or jax-rs. But in either case the path is hardcodet to /openapi/swagger.json</li>
+   *
+   * if neither generateDocMojo goal nor rip goal is activated then the server at hand
+   * has been configured to create and expose the open doc using some other tools than the rip-maven-plugin.
+   * In such case the rip-maven-plugin is likely configured with the generateUi goal.
+   * In such case we use the configureable path generateUiConfig.getPathToOpenApiDoc() which defaults to /v3/api-docs.
+   *
+   * @return
+   */
+  private String getPathToOpenApiDoc() throws MojoExecutionException {
+    if (RipMavenPluginGoal.GENERATE_DOC.isActivated(project, propertiesReader) || RipMavenPluginGoal.RIP.isActivated(project, propertiesReader)) {
+      return "/openapi/swagger.json";
+    }
+    return generateUiConfig.getPathToOpenApiDoc();
   }
 
   private void copySwaggerUiJaxRsResourceToBuildOutputDir() throws MojoExecutionException {

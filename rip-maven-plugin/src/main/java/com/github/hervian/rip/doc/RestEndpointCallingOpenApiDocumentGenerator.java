@@ -1,8 +1,17 @@
 package com.github.hervian.rip.doc;
 
 import com.github.hervian.rip.util.MojoExecutorWrapper;
+import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
@@ -107,14 +116,25 @@ public class RestEndpointCallingOpenApiDocumentGenerator implements OpenApiDocum
 
   private void startServer(DocumentGeneratorInput input) throws MojoExecutionException, DependencyResolutionRequiredException {
     input.getLog().info("Starting server with the aim of retrieving the open api doc from configured endpoint.");
+
+    //List<String> classpathList = input.getProject().getTestClasspathElements();
+    //classpathList.addAll(getRipMavenPluginClassPath());
+    List<String> classpathList = getRipMavenPluginClassPath();
+    String classpath = classpathList.stream().distinct().collect(Collectors.joining(",")).replace(";", ",");
+    /*String classpath = String.join(",", input.getProject().getTestClasspathElements());
+    classpath = classpath + "," + getRipMavenPluginClassPath();*/
+    System.out.println("\nsorted and pretty printed classpath being used:\n");
+    System.out.println(classpathList.stream().distinct().sorted().collect(Collectors.joining(",")).replace(";", ",").replace(",", "\n"));
+
     MojoExecutorWrapper.executeMojo(
       plugin(
         groupId("org.springframework.boot"),
         artifactId("spring-boot-maven-plugin"), //https://docs.spring.io/spring-boot/docs/3.0.2/maven-plugin/reference/htmlsingle/#goals-start
-        version(input.getPropertiesReader().getSpringBootVersion())//TODO: get values from PropertiesReader OR from implementing project's spring version?
+        version(input.getPropertiesReader().getSpringBootVersion())//TODO: get values from implementing project's spring version instead of hardcoding?
       ),
       goal("start"),
       configuration(
+          element(name("directories"),classpath),
           //element(name("profiles"), element(name("profile"), "")),TODO make is possible to configure a build profile in the GenerateDocConfig
 
         /*element(name("classesDirectory"), input.getProject().getBuild().getOutputDirectory()),
@@ -135,6 +155,75 @@ public class RestEndpointCallingOpenApiDocumentGenerator implements OpenApiDocum
         input.getMavenSession(),
         input.getPluginManager()
       ));
+  }
+
+  private List<String> getRipMavenPluginClassPath() throws MojoExecutionException {
+    if (springWebfluxIsOnClasspath()) {
+      return getRipMavenPluginWebfluxClassPath();
+    } else if (springMvnIsOnClassPath()) {
+      return getRipMavenPluginWebmvcClassPath();
+    }
+    return Lists.newArrayList();
+  }
+
+  private List<String>  getRipMavenPluginWebfluxClassPath() throws MojoExecutionException {
+    String filename = "/rip-maven-plugin.webflux-classpath";
+    return getClasspathFromFilename(filename);
+  }
+
+  private List<String>  getRipMavenPluginWebmvcClassPath() throws MojoExecutionException {
+    String filename = "/rip-maven-plugin.webmvc-classpath";
+    return getClasspathFromFilename(filename);
+  }
+
+  private List<String> getClasspathFromFilename(String filename) throws MojoExecutionException {
+    InputStream classpathStream = getClass().getResourceAsStream(filename);
+    try {
+      String classpathString = IOUtils.toString(classpathStream, StandardCharsets.UTF_8.name());
+      return Arrays.asList(classpathString.split(","));
+    } catch (IOException e) {
+      throw new MojoExecutionException(String.format("Exception thrown when getting file %s", filename), e);
+    }
+  }
+
+  private String getPathToSpringDocApiJars() {
+    String openApiResourceJar = "";
+    //Inspect project - which springdoc jar to use?
+    if (springWebfluxIsOnClasspath()) {
+      openApiResourceJar = org.springdoc.webflux.core.configuration.SpringDocWebFluxConfiguration.class.getProtectionDomain().getCodeSource().getLocation().getPath(); //get path to the jar of springdoc-openapi-starter-webflux-ui using a random type from that project. See https://springdoc.org/v2/modules.html#_spring_webflux_support
+    } else if (springMvnIsOnClassPath()) {
+      openApiResourceJar = org.springdoc.webmvc.api.OpenApiResource.class.getProtectionDomain().getCodeSource().getLocation().getPath(); //get path to the jar of springdoc-openapi-starter-webmvc-api using a random type from that project. See https://springdoc.org/v2/modules.html#_spring_webmvc_support
+    }
+    //Get the jars that are pulled in transitively.
+    //TODO: Very primitive approach! Get the classpath of the rip-maven-plugin and add that! Either using some MavenProject like class OR by calling mvn dependency:build-classpath on rip-maven-plugin and capturing the relevant output i.e. the classpath
+    //mvn -f path/to/rip-maven-plugin/pom.xml dependency:build-classpath -Dmdep.outputFile=classpath.txt
+    List<String> jars = Lists.newArrayList();
+    jars.add(getJarOf( io.swagger.v3.oas.models.media.Schema.class));
+    jars.add(getJarOf(io.swagger.v3.core.converter.ModelConverter.class));
+    jars.add(getJarOf(org.springdoc.core.conditions.MultipleOpenApiSupportCondition.class));
+    return openApiResourceJar.substring(1) + "," + String.join(",", jars);
+  }
+
+  private String getJarOf(Class clazz) {
+    String pathToJar = clazz.getProtectionDomain().getCodeSource().getLocation().getPath(); //get path to the jar of springdoc-openapi-starter-webmvc-api using a random type from that project. See https://springdoc.org/v2/modules.html#_spring_webmvc_support
+    return pathToJar.substring(1); //remove leading slash
+  }
+
+  private boolean springWebfluxIsOnClasspath() {
+    return isOnClassPath("org.springframework.web.reactive.config.WebFluxConfigurer"); //Some random type from spring-webflux jar
+  }
+
+  private boolean springMvnIsOnClassPath() {
+    return isOnClassPath("org.springframework.web.servlet.DispatcherServlet"); // Some random type from spring-webmvc jar.
+  }
+
+  private boolean isOnClassPath(String fqcn) {
+    try {
+      Class.forName(fqcn);
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
   }
 
   private void getOpenApiDoc(DocumentGeneratorInput input) throws MojoExecutionException {

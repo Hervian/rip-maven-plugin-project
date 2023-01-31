@@ -22,7 +22,7 @@
   <properties>
     <maven.compiler.source>18</maven.compiler.source>
     <maven.compiler.target>18</maven.compiler.target>
-	<spring.boot.version>2.7.3</spring.boot.version>
+	  <spring.boot.version>2.7.3</spring.boot.version>
     <!--<start-class>eu.mansipi.jokes_server.Main</start-class>-->
   </properties>
   
@@ -55,6 +55,30 @@
       <version>2.2.0</version>
     </dependency>
 
+    <!-- add integration testing such as to verify that a swagger-ui is available and configured to correctly load an openapi doc. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>4.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>htmlunit-driver</artifactId>
+      <version>4.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

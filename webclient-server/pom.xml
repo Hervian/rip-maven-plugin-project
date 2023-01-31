@@ -23,7 +23,8 @@
   <properties>
     <maven.compiler.source>18</maven.compiler.source>
     <maven.compiler.target>18</maven.compiler.target>
-	<spring.boot.version>2.7.3</spring.boot.version>
+	  <!--<spring.boot.version>2.7.3</spring.boot.version>-->
+    <spring.boot.version>3.0.1</spring.boot.version>
     <!--<start-class>eu.mansipi.random_facts_server.Main</start-class>-->
   </properties>
   
@@ -67,12 +68,23 @@
       <version>1.6.9</version>
     </dependency>-->
 
-    <!--Guide to the project, including the starting point: the controller. org.springdoc.webflux.api.OpenApiResource is Controller that handles /v3/api-docs and /v3/api-docs.yaml endpoints-->
-    <!--Works:-->
+    <!--
+    Below springdoc dependencies adds the endpoint/controller org.springdoc.webflux.api.OpenApiResource
+    which creates a swagger.json file via annotation scan.
+    The json is by default available at /v3/api-docs.
+    NB One can customize the path using the property 'springdoc.api-docs.path' but if you do, you must remember to
+    update the rip-maven-plugin configuration accordingly such as to inform the plugin about where to find the json
+    (which is needs to perform the generateUi goal and generateClient goal.)
+    -->
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-webflux-core</artifactId>
-      <version>1.6.9</version>
+      <artifactId>springdoc-openapi-starter-webflux-api</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-common</artifactId>
+      <version>2.0.2</version>
     </dependency>
 
     <dependency>
@@ -80,8 +92,6 @@
       <artifactId>swagger-annotations</artifactId>
       <version>2.2.0</version>
     </dependency>
-
-
   </dependencies>
 
   <build>
@@ -93,7 +103,7 @@
         <configuration>
           <generateDocConfig>
             <additionalDocs>
-              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+              <additionalDoc>HTML2</additionalDoc>
             </additionalDocs>
             <!--<restAnnotationType>SPRING</restAnnotationType>-->
           </generateDocConfig>
@@ -110,12 +120,9 @@
         <executions>
           <execution>
             <goals>
-              <!--<goal>generateDoc</goal>&lt;!&ndash;Mandatory goal. Bound to Compile phase. Optional configuration: 1) Add @io.swagger.v3.oas.annotations.OpenAPIDefinition annotation anywhere in your source code to customize the generated swagger doc. 2) Add other swagger annotations to your REST methods to add detailed documentation (@Api, @ApiOperation etc). Note that both requires that you add the relevant dependency to get those annotations on the classpath if not already present. &ndash;&gt;
-              <goal>generateUi</goal>&lt;!&ndash;Optional goal. Bound to Compile phase.&ndash;&gt;
-              <goal>generateClient</goal>&lt;!&ndash;Optional goal. Bound to Deploy phase. TODO: Optionally add ...&ndash;&gt;-->
               <!--
                 In this project we are testing that the plugin supports the use case where the project does not want the
-                plugin to handle generation if swagger.json.
+                plugin to handle generation of swagger.json.
                 Instead, the user generates those via standard springdoc dependencies and uses the rip-maven-plugin to
                 generate the swagger-ui and a client.
               -->

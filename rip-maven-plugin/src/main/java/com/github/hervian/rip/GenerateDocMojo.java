@@ -10,12 +10,14 @@ import com.github.hervian.rip.doc.RestEndpointCallingOpenApiDocumentGenerator;
 import com.github.hervian.rip.doc.src.OpenApiConfig;
 import com.github.hervian.rip.util.CodeScanner;
 import com.github.hervian.rip.util.MojoExecutorWrapper;
+import com.github.hervian.rip.util.RipMavenPluginGoal;
 import com.github.hervian.rip.util.compilation.ClassFileCopier;
 import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import lombok.Data;
 import lombok.Getter;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
@@ -197,22 +199,17 @@ public class GenerateDocMojo extends AbstractMojo {
    * </ul>
    */
   private void validatePhaseAndGoals() throws MojoExecutionException {
-    System.out.println("mavenSession.getGoals(): " +mavenSession.getGoals());
-
-    Plugin swaggerPlugin = project.getPlugin(String.format("%s:%s", propertiesReader.getGroupId(), propertiesReader.getArtifactId()));
-    for (PluginExecution pluginExecution: swaggerPlugin.getExecutions()){ //Consider using maven-replacer-plugin https://gist.github.com/4n3w/3365657
-      listOfGoals = pluginExecution.getGoals();
-      System.out.println("goals: " + listOfGoals);
-      System.out.println("phases: " + pluginExecution.getPhase());
-    }
-    Xpp3Dom dom = (Xpp3Dom)swaggerPlugin.getConfiguration();
+    getLog().info("maven lifecycle goals: " +mavenSession.getGoals());
+    listOfGoals = RipMavenPluginGoal.getListOfGoals(project, propertiesReader);
+    getLog().info("rip-maven-plugin goals:" + String.join(",",listOfGoals));
+   /* Xpp3Dom dom = (Xpp3Dom)swaggerPlugin.getConfiguration();
     System.out.println("dom.getAttributeNames().length: " + dom.getAttributeNames().length);
     for (String attributeName: dom.getAttributeNames()){
       System.out.println("plugin attributeName: " + attributeName);
     }
     for (Xpp3Dom child: dom.getChildren()){
       System.out.println(child.getName()+", " + child.getValue());
-    }
+    }*/
   }
 
   private File generateSwaggerDoc() throws MojoExecutionException {
