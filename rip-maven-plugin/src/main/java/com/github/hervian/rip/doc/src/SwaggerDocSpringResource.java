@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.ws.rs.core.UriInfo;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

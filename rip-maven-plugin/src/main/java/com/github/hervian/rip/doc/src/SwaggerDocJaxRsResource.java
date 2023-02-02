@@ -48,7 +48,9 @@ public class SwaggerDocJaxRsResource  {
         /*System.out.println("swagger.json resource!=null: "+Boolean.valueOf(resource!=null));
     return resource;*/
             String swaggerJson = StreamUtils.copyToString(resource, Charset.forName("UTF-8"));
-        swaggerJson = swaggerJson.replace("localhost:8080", "http://localhost:"+serverPort + "/");
+    System.out.println("serverPort = " + serverPort);
+    System.out.println("Replacing the url in the return json with the inferred port of the running server, namely: " + uriInfo.getBaseUri().getPort());
+        swaggerJson = swaggerJson.replace("localhost:8080", "http://localhost:"+uriInfo.getBaseUri().getPort() + "/");
         return Response.ok(swaggerJson.getBytes(StandardCharsets.UTF_8)).build();
       }
 

@@ -1,5 +1,6 @@
 package com.github.hervian.rip.doc;
 
+import com.github.hervian.rip.util.ClassPathHelper;
 import com.github.hervian.rip.util.MojoExecutorWrapper;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
@@ -210,20 +211,11 @@ public class RestEndpointCallingOpenApiDocumentGenerator implements OpenApiDocum
   }
 
   private boolean springWebfluxIsOnClasspath() {
-    return isOnClassPath("org.springframework.web.reactive.config.WebFluxConfigurer"); //Some random type from spring-webflux jar
+    return ClassPathHelper.isOnClassPath("org.springframework.web.reactive.config.WebFluxConfigurer"); //Some random type from spring-webflux jar
   }
 
   private boolean springMvnIsOnClassPath() {
-    return isOnClassPath("org.springframework.web.servlet.DispatcherServlet"); // Some random type from spring-webmvc jar.
-  }
-
-  private boolean isOnClassPath(String fqcn) {
-    try {
-      Class.forName(fqcn);
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
+    return ClassPathHelper.isOnClassPath("org.springframework.web.servlet.DispatcherServlet"); // Some random type from spring-webmvc jar.
   }
 
   private void getOpenApiDoc(DocumentGeneratorInput input) throws MojoExecutionException {

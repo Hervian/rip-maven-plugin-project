@@ -7,6 +7,7 @@ import com.github.hervian.rip.doc.src.SwaggerDocJaxRsResource;
 import com.github.hervian.rip.doc.src.SwaggerDocSpringResource;
 import com.github.hervian.rip.ui.src.SwaggerUiJaxRsResource;
 import com.github.hervian.rip.ui.src.SwaggerUiSpringResource;
+import com.github.hervian.rip.util.ClassPathHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -86,8 +87,9 @@ public class GenerateDocConfig {
   private boolean skipCreateOpenApiDefinition;
 
   public enum RestAnnotationType { //https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages
+    SPRING_JAX_RS(SwaggerDocJaxRsResource.class, SwaggerUiJaxRsResource.class, Arrays.asList(GET.class, Path.class, Context.class, Component.class, ConditionalOnProperty.class, Operation.class, StreamUtils.class, Value.class, JsonDeserialize.class, EventListener.class, ApplicationReadyEvent.class)),
     SPRING(SwaggerDocSpringResource.class, SwaggerUiSpringResource.class, Arrays.asList(ConditionalOnProperty.class, GetMapping.class, RestController.class, RequestMapping.class, Operation.class, GET.class, Mono.class, MultiValueMap.class, ObjectMapper.class,  Versioned.class, Value.class, EventListener.class, ApplicationReadyEvent.class)),
-    SPRING_JAX_RS(SwaggerDocJaxRsResource.class, SwaggerUiJaxRsResource.class, Arrays.asList(GET.class, Path.class, Context.class, Component.class, ConditionalOnProperty.class, Operation.class, StreamUtils.class, Value.class, JsonDeserialize.class, EventListener.class, ApplicationReadyEvent.class));
+    UNSPECIFIED(null, null, null);
 
     @Getter private Class<?> swaggerDocResource;
     @Getter private Class<?> swaggerUiResource;
@@ -100,9 +102,21 @@ public class GenerateDocConfig {
     }
   }
 
-  @Parameter(defaultValue = "SPRING")
+  /*@Parameter(defaultValue = "UNSPECIFIED")*/
   @Builder.Default
-  private RestAnnotationType restAnnotationType = RestAnnotationType.SPRING;
+  private RestAnnotationType restAnnotationType = RestAnnotationType.UNSPECIFIED;
+
+  public RestAnnotationType getRestAnnotationType() {
+    RestAnnotationType inferredRestAnnotationType = restAnnotationType;
+    System.out.println("restAnnotationType = " + restAnnotationType);
+    if (restAnnotationType==null || restAnnotationType==GenerateDocConfig.RestAnnotationType.UNSPECIFIED) {
+      String fqcnOfRequestMappingClass = "org.springframework.web.bind.annotation.RequestMapping";
+      inferredRestAnnotationType = ClassPathHelper.isOnClassPath(fqcnOfRequestMappingClass) ? RestAnnotationType.SPRING : RestAnnotationType.SPRING_JAX_RS;
+      System.out.println("ClassPathHelper.isOnClassPath(org.springframework.web.bind.annotation.RequestMapping) = " + ClassPathHelper.isOnClassPath(fqcnOfRequestMappingClass));
+    }
+    System.out.println("returnin: " + inferredRestAnnotationType);
+    return restAnnotationType = inferredRestAnnotationType;
+  }
 
   /**
    * Configure the path at which the openapi doc (swagger.json) can be downloadet. Default is "/v3/api-docs" which is the default path set by the springdoc project.

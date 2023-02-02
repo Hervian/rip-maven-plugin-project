@@ -276,31 +276,34 @@ public class GenerateClientMojo extends AbstractMojo {
    * @return
    */
   private String getPathToSwaggerDoc(boolean callGenerateDocMojoIfOpenApiDocIsNotFound) throws MojoExecutionException {
+    File defaultSwaggerJsonLocationAsGeneratedByGeneratedDocMojo = new File(GenerateDocMojo.getSwaggerDocFileAbsolutePath(project));
+    if (defaultSwaggerJsonLocationAsGeneratedByGeneratedDocMojo.exists()) {
+      return defaultSwaggerJsonLocationAsGeneratedByGeneratedDocMojo.getAbsolutePath();
+    }
+
     String path = Strings.isNullOrEmpty(generateClientConfig.getPathToOpenApiDoc()) ? (GenerateDocMojo.swagerJsonFilePath) : generateClientConfig.getPathToOpenApiDoc();
     if (!path.startsWith("/")) {
       path = "/" + path;
     }
 
     File fileInGeneratedSourcesFolder = new File(project.getBuild().getDirectory() + path);
+    System.out.println(fileInGeneratedSourcesFolder.getAbsolutePath() + " exists? " + fileInGeneratedSourcesFolder.exists());
     if (fileInGeneratedSourcesFolder.exists()) {
       return fileInGeneratedSourcesFolder.getAbsolutePath();
     }
     File fileInClassesDir = new File(project.getBuild().getOutputDirectory() + path);
 
+    System.out.println(fileInClassesDir.getAbsolutePath() + " exists? " + fileInClassesDir.exists());
     if (fileInClassesDir.exists()) {
       return fileInClassesDir.getAbsolutePath();
     }
 
     if (callGenerateDocMojoIfOpenApiDocIsNotFound) {
-      /**
-       * Ok, so we could not find the swagger.json file.
-       * One possible reason could be that the project using the rip-maven-plugin has not configured the generateDoc mojo
-       * to run because the project fx is based on springdoc dependencies which adds an endpoint that generates the
-       * swagger.json at runtime when the endpoint is first called.
-       * The user could have configured the generateDoc mojo to run and set generateDocConfig.restAnnotationType=SPRING.
-       * This would cause the logic to start up the server and download the json.
-       * Let us call the generateDoc mojo to achieve the same:
-       */
+      getLog().info("Ok, so we could not find the swagger.json file.\n" +
+          "\nOne possible reason could be that the project using the rip-maven-plugin has not configured the generateDoc mojo\n" +
+          "\nto run because the project fx is based on springdoc dependencies which adds an endpoint that generates the\n" +
+          "\nswagger.json at runtime when the endpoint is first called.\n" +
+          "\nLet us call the generateDoc mojo.");
       GenerateDocMojo generateDocMojo = new GenerateDocMojo();
       generateDocMojo.setGenerateDocConfig(GenerateDocConfig
           .builder()

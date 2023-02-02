@@ -6,7 +6,7 @@
 
   <groupId>eu.mansipi</groupId>
   <artifactId>feign-server</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+ <!-- <version>1.0.0-SNAPSHOT</version>-->
 
   <!--<parent>
     <groupId>org.springframework.boot</groupId>
@@ -83,7 +83,7 @@
 
   <build>
     <plugins>
-      <plugin>
+      <!--<plugin>
         <groupId>com.github.kongchen</groupId>
         <artifactId>swagger-maven-plugin</artifactId>
         <version>3.1.8</version>
@@ -112,7 +112,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>com.github.hervian</groupId>
         <artifactId>rip-maven-plugin</artifactId>
@@ -123,7 +123,7 @@
               <resourcePackage>eu.mansipi.meta-server.controllers</resourcePackage>
             </resourcePackages>-->
             <additionalDocs>
-              <additionalDoc>HTML2</additionalDoc> <!--TODO Does not work with none - breaks on trying to copy non existing html-->
+              <additionalDoc>HTML2</additionalDoc>
             </additionalDocs>
             <restAnnotationType>SPRING_JAX_RS</restAnnotationType>
           </generateDocConfig>

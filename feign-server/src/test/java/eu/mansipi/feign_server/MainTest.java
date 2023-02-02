@@ -15,15 +15,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Guides:
+ * https://blog.ttulka.com/double-testing/
+ */
 /*@RunWith(SpringRunner.class)
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = Main.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)*/
 public class MainTest {
 
   private static Logger log =  LogManager.getLogger(MainTest.class);
-/*
 
-  @Test //Work in progress. Must run after rip-maven-plugin is completely done.
+  /*@Test //Work in progress. Must run after rip-maven-plugin is completely done.
   public void HeadlessTest() {
     WebDriver driver = new HtmlUnitDriver(true);
     driver.get("http://localhost:8080/openapi/swagger-ui.html");
@@ -38,7 +41,6 @@ public class MainTest {
     Assert.assertFalse(driver.getTitle().contains("404"));
 
     driver.close();
-  }
-*/
+  }*/
 
 }

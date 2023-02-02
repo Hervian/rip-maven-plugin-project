@@ -75,7 +75,7 @@ Path apiClient = null;
   }
 
   private String generateClientSourceCode(ClientGeneratorInput clientGeneratorInput) throws MojoExecutionException {
-    clientGeneratorInput.getLog().info("Genering Java client code from " + clientGeneratorInput.getPathToSwaggerDoc());
+    clientGeneratorInput.getLog().info("Generating Java client code from " + clientGeneratorInput.getPathToSwaggerDoc());
     MavenProject project = clientGeneratorInput.getProject();
     String outputPath = ClientGenerator.getOutputPath(project) + "/java";
 //Can this resource be used for better client generation=´? https://arnoldgalovics.com/swagger-codegen-feign-gradle/
