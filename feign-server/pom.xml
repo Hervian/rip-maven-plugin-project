@@ -91,7 +91,11 @@
           <apiSources>
             <apiSource>
               <springmvc>false</springmvc>
-              <locations><location>eu.mansipi.feign_server.controllers.JokesController</location></locations>
+              <locations>
+                <location>eu.mansipi.feign_server.controllers.JokesController</location>
+                <location>eu.mansipi.feign_server.controllers.SickServerApi</location>
+                <location>eu.mansipi.feign_server.controllers.TimeController</location>
+              </locations>
                 <host>/</host>
                 <outputPath>/openapi</outputPath>
                 <swaggerDirectory>${project.build.directory}/openapi</swaggerDirectory>

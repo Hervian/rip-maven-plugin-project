@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import ${package}.ClientApiConfig;
+
 import javax.annotation.PostConstruct;
 
 @Service
@@ -14,7 +16,7 @@ public class Rest {
   public static class BeanInjector {
     <#list restClients as restClient>
     @Autowired
-    private ClientApiConfig.${restClient.getArtifactIdAsJavaTypeName()} _${restClient.getArtifactIdAsJavaTypeName()};
+    private ${package}.ClientApiConfig.${restClient.getArtifactIdAsJavaTypeName()} _${restClient.getArtifactIdAsJavaTypeName()};
     </#list>
     @PostConstruct
     public void postConstruct() {

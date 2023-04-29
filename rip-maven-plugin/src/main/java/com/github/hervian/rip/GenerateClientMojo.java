@@ -199,6 +199,10 @@ public class GenerateClientMojo extends AbstractMojo {
     System.out.println("Path to old api file: " + options.getOldApiPath());
 
     String oldApi = options.getOldApiPath(), newApi = getPathToSwaggerDoc(true);
+    if (oldApi==null) {
+      getLog().info("old api is null, i.e. the logic could not find any previous swagger doc to compare the current one against. This typically mean that you have not yet pushed any binary to remote. Returning TRUE meaning 'no diffs'");
+      return true;
+    }
     getLog().info("oldApi path = " + oldApi);
     getLog().info("newApi path = " + newApi);
     try {

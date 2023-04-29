@@ -42,21 +42,26 @@ public class StringToFileCompiler {
     }
 
     List<String> jarPathsToAddToModulePath = restAnnotationTypes.stream().map(e -> e.getProtectionDomain().getCodeSource().getLocation().getPath()).collect(Collectors.toList());
-    String path = String.join(";", jarPathsToAddToModulePath);
+
+    // pathSeparator = isWindows ? ";" : ":";
+    String path = String.join(File.pathSeparator, jarPathsToAddToModulePath);
+
    /* String path = GET.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     path += ";" + Operation.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     path += ";" + ConditionalOnProperty.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     path += ";" + Component.class.getProtectionDomain().getCodeSource().getLocation().getPath();*/
+
     path = path.replace(";/", ";");
     if (path.startsWith("/")){
       path = path.substring(1);
     }
     options.add(path);
+    //System.out.println("module-path:\n" + path);
 
     options.add("--add-modules");
     options.add("java.ws.rs,com.fasterxml.jackson.databind"); //Can any of these be used instead? ALL-DEFAULT, ALL-SYSTEM, and ALL-MODULE-PATH
 
-   /* System.out.println("Modules:");
+    /*System.out.println("Modules:");
     ModuleLayer.boot().modules().stream()
       .map(Module::getName)
       .forEach(System.out::println);*/
